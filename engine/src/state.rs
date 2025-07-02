@@ -1,45 +1,7 @@
 use std::iter;
 use winit::{event::*,event_loop::EventLoop,window::{Window, WindowBuilder}};
 
-
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-struct Vertex
-{
-    position: [f32; 3],
-    tex_coords: [f32; 2]
-}
-
-impl Vertex
-{
-    fn desc() -> wgpu::VertexBufferLayout<'static>
-    {
-        wgpu::VertexBufferLayout
-        {
-            array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::VertexStepMode::Vertex,
-            attributes:
-            &[
-                wgpu::VertexAttribute
-                {
-                    offset: 0,
-                    shader_location: 0,
-                    format: wgpu::VertexFormat::Float32x3
-                },
-                wgpu::VertexAttribute
-                {
-                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
-                    shader_location: 1,
-                    format: wgpu::VertexFormat::Float32x2,
-                }
-            ]
-        }
-    }
-}
-
-
-
+use crate::renderer::Renderer;
 
 pub struct State<'a> 
 {
@@ -47,14 +9,14 @@ pub struct State<'a>
     device: wgpu::Device,
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
-    size: winit::dpi::PhysicalSize<u32>,
+    pub size: winit::dpi::PhysicalSize<u32>,
     window: &'a Window,
     render_pipeline: wgpu::RenderPipeline
 }
 
 impl<'a> State<'a> 
 {
-    async fn new(window: &'a Window) -> State<'a> 
+    pub async fn new(window: &'a Window) -> State<'a> 
     {
         let size = window.inner_size();
 
@@ -107,65 +69,7 @@ impl<'a> State<'a>
 
         surface.configure(&device, &config);
 
-        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor
-        {
-            label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
-        });
-
-        let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor
-        {
-            label: Some("Render Pipeline Layout"),
-            bind_group_layouts: 
-            &[
-                
-            ],
-            push_constant_ranges: &[]
-        });
-
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor
-        {
-            label: Some("Render Pipeline"),
-            layout: Some(&render_pipeline_layout),
-            vertex: wgpu::VertexState 
-            {
-                module: &shader,
-                entry_point: Some("vs_main"),
-                buffers: &[Vertex::desc()],
-                compilation_options: wgpu::PipelineCompilationOptions::default()
-            },
-            fragment: Some(wgpu::FragmentState
-            {
-                module: &shader,
-                entry_point: Some("fs_main"),
-                targets: &[Some(wgpu::ColorTargetState
-                {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
-                    write_mask: wgpu::ColorWrites::ALL
-                })],
-                compilation_options: wgpu::PipelineCompilationOptions::default()
-            }),
-            primitive: wgpu::PrimitiveState
-            {
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),
-                polygon_mode: wgpu::PolygonMode::Fill,
-                unclipped_depth: false,
-                conservative: false
-            },
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState
-            {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false
-            },
-            multiview: None,
-            cache: None
-        });
+        let render_pipeline = Renderer::new(&device, &config);
 
         Self 
         {
@@ -175,11 +79,11 @@ impl<'a> State<'a>
             config,
             size,
             window,
-            render_pipeline
+            render_pipeline: render_pipeline.pipeline
         }
     }
 
-    fn window(&self) -> &Window 
+    pub fn window(&self) -> &Window 
     {
         &self.window
     }
@@ -196,12 +100,12 @@ impl<'a> State<'a>
     }
 
     #[allow(unused)]
-    fn input(&mut self, event: &WindowEvent) -> bool { false }
+    pub fn input(&mut self, event: &WindowEvent) -> bool { false }
 
     #[allow(unused)]
-    fn update(&mut self) {}
+    pub fn update(&mut self) {}
 
-    fn render(&mut self) -> Result<(), wgpu::SurfaceError> 
+    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> 
     {
         let output = self.surface.get_current_texture()?;
         let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
@@ -244,118 +148,4 @@ impl<'a> State<'a>
 
         Ok(())
     }
-}
-
-pub trait EngineEvent 
-{
-    fn update(&mut self, dt: f64);
-    fn render(&self);
-}
-
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
-pub async fn game_loop<T: EngineEvent + 'static>(mut game: Box<T>)
-{
-    cfg_if::cfg_if! 
-    {
-        if #[cfg(target_arch = "wasm32")] 
-        {
-            std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-            console_log::init_with_level(log::Level::Info).expect("Couldn't initialize logger");
-        } else 
-        {
-            env_logger::init();
-        }
-    }
-
-    let event_loop = EventLoop::new().unwrap();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
-
-    #[cfg(target_arch = "wasm32")]
-    {
-        use winit::dpi::PhysicalSize;
-
-        use winit::platform::web::WindowExtWebSys;
-        web_sys::window().and_then(|win| win.document()).and_then(|doc| 
-        {
-            let dst = doc.get_element_by_id("wasm-example")?;
-            let canvas = web_sys::Element::from(window.canvas()?);
-            dst.append_child(&canvas).ok()?;
-            Some(())
-        }).expect("Couldn't append canvas to document body.");
-
-        let _ = window.request_inner_size(PhysicalSize::new(450, 400));
-    }
-
-    let mut state = State::new(&window).await;
-    let mut surface_configured = false;
-
-    let mut last_frame_time = std::time::Instant::now();
-
-    event_loop.run(move | event, control_flow |
-    {
-        match event
-        {
-            Event::WindowEvent 
-            {
-                ref event,
-                window_id,
-            }
-            if window_id == state.window().id() => 
-            {
-                if !state.input(event){
-                match event
-                {
-                    WindowEvent::CloseRequested => control_flow.exit(),
-                    WindowEvent::Resized(physical_size) => 
-                    {
-                        log::info!("physical_size: {physical_size:?}");
-                        surface_configured = true;
-                        state.resize(*physical_size);
-                    }
-                    WindowEvent::RedrawRequested => 
-                    {
-                        // state.window().request_redraw();
-
-                        if !surface_configured 
-                        {
-                            return;
-                        }
-
-
-                        ///////////////////////////////////////////////////
-                        state.update(); // Temporary
-                        // state.input(&event); //Temporary
-                        ///////////////////////////////////////////////////
-                        match state.render() 
-                        {
-                            Ok(_) => {}
-                            Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.size),
-                            Err(wgpu::SurfaceError::OutOfMemory | wgpu::SurfaceError::Other) => 
-                            {
-                                log::error!("OutOfMemory");
-                                control_flow.exit();
-                            }
-
-                            Err(wgpu::SurfaceError::Timeout) => 
-                            {
-                                log::warn!("Surface timeout")
-                            }
-                        }
-                    }
-                    _ => {}
-                }}
-            }
-            Event::AboutToWait =>
-            {
-                let now = std::time::Instant::now();
-                let dt = (now - last_frame_time).as_secs_f64();
-                
-                game.update(dt);
-                state.window().request_redraw();
-
-                last_frame_time = std::time::Instant::now();
-            }
-            _ => {}
-        }
-    }).unwrap();
 }

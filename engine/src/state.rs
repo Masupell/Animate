@@ -11,7 +11,7 @@ pub struct State<'a>
     config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
     window: &'a Window,
-    render_pipeline: wgpu::RenderPipeline
+    renderer: Renderer
 }
 
 impl<'a> State<'a> 
@@ -41,7 +41,7 @@ impl<'a> State<'a>
         let (device, queue) = adapter.request_device(&wgpu::DeviceDescriptor 
         {
             label: None,
-            required_features: wgpu::Features::empty(),
+            required_features: wgpu::Features::POLYGON_MODE_LINE,  // empty()
             required_limits: if cfg!(target_arch = "wasm32") 
             {
                 wgpu::Limits::downlevel_webgl2_defaults()
@@ -69,7 +69,7 @@ impl<'a> State<'a>
 
         surface.configure(&device, &config);
 
-        let render_pipeline = Renderer::new(&device, &config);
+        let renderer = Renderer::new(&device, &config);
 
         Self 
         {
@@ -79,7 +79,7 @@ impl<'a> State<'a>
             config,
             size,
             window,
-            render_pipeline: render_pipeline.pipeline
+            renderer
         }
     }
 
@@ -116,31 +116,7 @@ impl<'a> State<'a>
         });
 
         {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor 
-            {
-                label: Some("Render Pass"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment 
-                {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations 
-                    {
-                        load: wgpu::LoadOp::Clear(wgpu::Color 
-                        {
-                            r: 0.0,
-                            g: 0.0,
-                            b: 0.0,
-                            a: 1.0,
-                        }),
-                        store: wgpu::StoreOp::Store,
-                    },
-                })],
-                depth_stencil_attachment: None,
-                occlusion_query_set: None,
-                timestamp_writes: None,
-            });
-
-            render_pass.set_pipeline(&self.render_pipeline);
+            self.renderer.begin_pass(&mut encoder, &view);
         }
 
         self.queue.submit(iter::once(encoder.finish()));

@@ -8,6 +8,15 @@ pub struct Vertex
 
 impl Vertex
 {
+    pub fn new(pos: [f32; 3], tex_pos: [f32; 2]) -> Self
+    {
+        Vertex
+        {
+            position: pos,
+            tex_coords: tex_pos
+        }
+    }
+    
     pub fn desc() -> wgpu::VertexBufferLayout<'static>
     {
         wgpu::VertexBufferLayout
@@ -32,3 +41,12 @@ impl Vertex
         }
     }
 }
+
+
+
+// #[derive(Copy, Clone)]
+// struct DrawCommand
+// {
+//     pub transform: [[f32; 4]; 4], // 4x4 model matrix
+//     pub color: [f32; 4],          // RGBA color
+// }

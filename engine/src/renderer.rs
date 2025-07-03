@@ -1,10 +1,30 @@
 use wgpu::util::DeviceExt;
 
-use crate::utility::Vertex;
+use crate::utility::{DrawCommand, InstanceData, Vertex};
+
+
+
+pub const QUAD_VERTICES: &[Vertex] =
+&[
+    Vertex { position: [-0.5, -0.5, 0.0], tex_coords: [0.0, 1.0] },
+    Vertex { position: [ 0.5, -0.5, 0.0], tex_coords: [1.0, 1.0] },
+    Vertex { position: [ 0.5,  0.5, 0.0], tex_coords: [1.0, 0.0] },
+    Vertex { position: [-0.5,  0.5, 0.0], tex_coords: [0.0, 0.0] }
+];
+
+pub const QUAD_INDICES: &[u16] =
+&[
+    0, 1, 2,
+    2, 3, 0
+];
+
+
 
 pub struct Renderer
 {
     pub pipeline: wgpu::RenderPipeline,
+    pub draw_commands: Vec<DrawCommand>,
+    instance_buf: Option<wgpu::Buffer>,
     vertex_buf: wgpu::Buffer,
     index_buf:  wgpu::Buffer,
     index_count: u32,
@@ -38,7 +58,7 @@ impl Renderer
             {
                 module: &shader,
                 entry_point: Some("vs_main"),
-                buffers: &[Vertex::desc()],
+                buffers: &[Vertex::desc(), InstanceData::desc()],
                 compilation_options: wgpu::PipelineCompilationOptions::default()
             },
             fragment: Some(wgpu::FragmentState
@@ -59,7 +79,7 @@ impl Renderer
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: Some(wgpu::Face::Back),
-                polygon_mode: wgpu::PolygonMode::Line, //::Line only work with required_features: wgpu::Features::POLYGON_MODE_LINE in request device
+                polygon_mode: wgpu::PolygonMode::Fill, //::Line only work with required_features: wgpu::Features::POLYGON_MODE_LINE in request device
                 unclipped_depth: false,
                 conservative: false
             },
@@ -84,20 +104,6 @@ impl Renderer
             Vertex::new([0.44147372, 0.2347359, 0.0], [0.9414737, 0.2652641])
         ];
 
-        let test =
-        [
-            Vertex::new([-0.5, -0.5, 0.0], [0.0, 1.0]),
-            Vertex::new([0.5, -0.5, 0.0], [1.0, 1.0]),
-            Vertex::new([0.5, 0.5, 0.0], [1.0, 0.0]),
-            Vertex::new([-0.5, 0.5, 0.0], [0.0, 0.0])
-        ];
-
-        let test2: &[u16] =
-        &[
-            0, 1, 2,
-            2, 3, 0
-        ];
-
         let indices: &[u16] = 
         &[
             0, 1, 4,
@@ -108,24 +114,27 @@ impl Renderer
         let vertex_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor 
         {
             label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(&test),
+            contents: bytemuck::cast_slice(QUAD_VERTICES),
             usage: wgpu::BufferUsages::VERTEX,
         });
 
         let index_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor 
         {
             label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(test2),
+            contents: bytemuck::cast_slice(QUAD_INDICES),
             usage: wgpu::BufferUsages::INDEX,
         });
 
+        let index_count = QUAD_INDICES.len() as u32;
 
         Self 
         { 
             pipeline,
+            draw_commands: Vec::new(),
+            instance_buf: None,
             vertex_buf,
             index_buf,
-            index_count: test2.len() as u32
+            index_count
         }
     }
 
@@ -157,7 +166,34 @@ impl Renderer
 
         render_pass.set_pipeline(&self.pipeline);
         render_pass.set_vertex_buffer(0, self.vertex_buf.slice(..));
-        render_pass.set_index_buffer(self.index_buf.slice(..), wgpu::IndexFormat::Uint16);
-        render_pass.draw_indexed(0..self.index_count, 0, 0..1);
+        if let Some(ref instance_buf) = self.instance_buf 
+        {
+            render_pass.set_vertex_buffer(1, instance_buf.slice(..));
+            render_pass.set_index_buffer(self.index_buf.slice(..), wgpu::IndexFormat::Uint16);
+            render_pass.draw_indexed(0..self.index_count, 0, 0..self.draw_commands.len() as u32);
+        }
+        // render_pass.set_index_buffer(self.index_buf.slice(..), wgpu::IndexFormat::Uint16);
+        // render_pass.draw_indexed(0..self.index_count, 0, 0..1);
+    }
+
+    pub fn test_draw(&mut self, transform: [[f32; 4]; 4], color: [f32; 4])
+    {
+        self.draw_commands.push(DrawCommand { transform, color });
+    }
+
+    pub fn upload_instances(&mut self, device: &wgpu::Device)
+    {
+        let instances: Vec<InstanceData> = self.draw_commands.iter().map(|cmd| InstanceData
+        {
+            model: cmd.transform,
+            color: cmd.color
+        }).collect();
+
+        self.instance_buf = Some(device.create_buffer_init(&wgpu::util::BufferInitDescriptor
+        {
+            label: Some("Instance Buffer"),
+            contents: bytemuck::cast_slice(&instances),
+            usage: wgpu::BufferUsages::VERTEX
+        }));
     }
 }

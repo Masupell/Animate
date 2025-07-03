@@ -115,6 +115,10 @@ impl<'a> State<'a>
             label: Some("Render Encoder"),
         });
 
+
+        self.renderer.test_draw([[1.75, 0.0, 0.0, 0.0], [0.0, 1.75, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [0.0, 0.0, 1.0, 1.0]);
+        self.renderer.test_draw([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [1.0, 0.0, 0.0, 1.0]);
+        self.renderer.upload_instances(&self.device);
         {
             self.renderer.begin_pass(&mut encoder, &view);
         }

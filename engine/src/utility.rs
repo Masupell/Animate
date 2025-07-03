@@ -47,6 +47,7 @@ impl Vertex
 #[derive(Copy, Clone)]
 pub struct DrawCommand
 {
+    pub mesh_id: usize,
     pub transform: [[f32; 4]; 4], // 4x4 model matrix
     pub color: [f32; 4],          // RGBA color
 }
@@ -103,4 +104,17 @@ impl InstanceData
             ],
         }
     }
+}
+
+
+pub struct Mesh
+{
+    pub vertex_buf: wgpu::Buffer,
+    pub index_buf: wgpu::Buffer,
+    pub index_count: u32
+}
+
+pub enum MeshID
+{
+    QUAD = 0
 }

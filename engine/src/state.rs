@@ -1,7 +1,7 @@
 use std::iter;
 use winit::{event::*,event_loop::EventLoop,window::{Window, WindowBuilder}};
 
-use crate::renderer::Renderer;
+use crate::{renderer::Renderer, utility::MeshID};
 
 pub struct State<'a> 
 {
@@ -116,8 +116,9 @@ impl<'a> State<'a>
         });
 
 
-        self.renderer.test_draw([[1.75, 0.0, 0.0, 0.0], [0.0, 1.75, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [0.0, 0.0, 1.0, 1.0]);
-        self.renderer.test_draw([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [1.0, 0.0, 0.0, 1.0]);
+        self.renderer.draw(0, [[1.75, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [0.0, 0.0, 1.0, 1.0]);
+        self.renderer.draw(0, [[1.0, 0.0, 0.0, 0.0], [0.0, 1.75, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [0.0, 0.0, 1.0, 1.0]);
+        self.renderer.draw(0, [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [1.0, 0.0, 0.0, 1.0]);
         self.renderer.upload_instances(&self.device);
         {
             self.renderer.begin_pass(&mut encoder, &view);

@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use crate::utility::{DrawCommand, InstanceData, Vertex};
+use crate::utility::{DrawCommand, InstanceData, Mesh, Vertex};
 
 
 
@@ -25,9 +25,7 @@ pub struct Renderer
     pub pipeline: wgpu::RenderPipeline,
     pub draw_commands: Vec<DrawCommand>,
     instance_buf: Option<wgpu::Buffer>,
-    vertex_buf: wgpu::Buffer,
-    index_buf:  wgpu::Buffer,
-    index_count: u32,
+    meshes: Vec<Mesh> // Simple for now, later gonna change it, so it does not load all meshes ni the beginning, but only creates a mesh the first time it is requested
 }
 
 impl Renderer
@@ -79,7 +77,7 @@ impl Renderer
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: Some(wgpu::Face::Back),
-                polygon_mode: wgpu::PolygonMode::Fill, //::Line only work with required_features: wgpu::Features::POLYGON_MODE_LINE in request device
+                polygon_mode: wgpu::PolygonMode::Line, //::Line only work with required_features: wgpu::Features::POLYGON_MODE_LINE in request device
                 unclipped_depth: false,
                 conservative: false
             },
@@ -93,23 +91,6 @@ impl Renderer
             multiview: None,
             cache: None
         });
-
-
-        let vertices = 
-        [
-            Vertex::new([-0.0868241, 0.49240386, 0.0], [0.4131759, 0.00759614]),
-            Vertex::new([-0.49513406, 0.06958647, 0.0], [0.0048659444, 0.43041354]),
-            Vertex::new([-0.21918549, -0.44939706, 0.0], [0.28081453, 0.949397]),
-            Vertex::new([0.35966998, -0.3473291, 0.0], [0.85967, 0.84732914]),
-            Vertex::new([0.44147372, 0.2347359, 0.0], [0.9414737, 0.2652641])
-        ];
-
-        let indices: &[u16] = 
-        &[
-            0, 1, 4,
-            1, 2, 4,
-            2, 3, 4,
-        ];
 
         let vertex_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor 
         {
@@ -127,14 +108,21 @@ impl Renderer
 
         let index_count = QUAD_INDICES.len() as u32;
 
+        let quad_mesh = Mesh
+        {
+            vertex_buf,
+            index_buf,
+            index_count
+        };
+
+        let meshes = vec![quad_mesh];
+
         Self 
         { 
             pipeline,
             draw_commands: Vec::new(),
             instance_buf: None,
-            vertex_buf,
-            index_buf,
-            index_count
+            meshes
         }
     }
 
@@ -165,20 +153,34 @@ impl Renderer
         });
 
         render_pass.set_pipeline(&self.pipeline);
-        render_pass.set_vertex_buffer(0, self.vertex_buf.slice(..));
-        if let Some(ref instance_buf) = self.instance_buf 
+        // render_pass.set_vertex_buffer(0, self.vertex_buf.slice(..));
+
+        // if let Some(ref instance_buf) = self.instance_buf
+        // {
+        //     let mesh = &self.meshes[]
+
+        //     render_pass.set_vertex_buffer(1, instance_buf.slice(..));
+        //     render_pass.set_index_buffer(self.index_buf.slice(..), wgpu::IndexFormat::Uint16);
+        //     render_pass.draw_indexed(0..self.index_count, 0, 0..self.draw_commands.len() as u32);
+        // }
+
+        if let Some(ref instance_buf) = self.instance_buf
         {
             render_pass.set_vertex_buffer(1, instance_buf.slice(..));
-            render_pass.set_index_buffer(self.index_buf.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..self.index_count, 0, 0..self.draw_commands.len() as u32);
+            for (instance_id, cmd) in self.draw_commands.iter().enumerate()
+            {
+                let mesh = &self.meshes[cmd.mesh_id];
+
+                render_pass.set_vertex_buffer(0, mesh.vertex_buf.slice(..));
+                render_pass.set_index_buffer(mesh.index_buf.slice(..), wgpu::IndexFormat::Uint16);
+                render_pass.draw_indexed(0..mesh.index_count, 0, instance_id as u32..instance_id as u32 + 1);
+            }
         }
-        // render_pass.set_index_buffer(self.index_buf.slice(..), wgpu::IndexFormat::Uint16);
-        // render_pass.draw_indexed(0..self.index_count, 0, 0..1);
     }
 
-    pub fn test_draw(&mut self, transform: [[f32; 4]; 4], color: [f32; 4])
+    pub fn draw(&mut self, mesh_id: usize, transform: [[f32; 4]; 4], color: [f32; 4])
     {
-        self.draw_commands.push(DrawCommand { transform, color });
+        self.draw_commands.push(DrawCommand { mesh_id, transform, color });
     }
 
     pub fn upload_instances(&mut self, device: &wgpu::Device)

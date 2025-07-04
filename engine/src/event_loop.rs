@@ -1,4 +1,4 @@
-use winit::{event::*,event_loop::EventLoop,window::WindowBuilder};
+use winit::{dpi::LogicalSize, event::*, event_loop::EventLoop, window::WindowBuilder};
 
 use crate::{input::Input, renderer::Renderer, state::State};
 
@@ -9,7 +9,7 @@ pub trait EngineEvent
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
-pub async fn game_loop<T: EngineEvent + 'static>(mut game: Box<T>)
+pub async fn game_loop<T: EngineEvent + 'static>(mut game: Box<T>, title: &str, size: (i32, i32))
 {
     cfg_if::cfg_if! 
     {
@@ -24,7 +24,7 @@ pub async fn game_loop<T: EngineEvent + 'static>(mut game: Box<T>)
     }
 
     let event_loop = EventLoop::new().unwrap();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let window = WindowBuilder::new().with_title(title).with_inner_size(LogicalSize::new(size.0, size.1)).build(&event_loop).unwrap();
 
     #[cfg(target_arch = "wasm32")]
     {

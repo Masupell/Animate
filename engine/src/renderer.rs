@@ -185,6 +185,12 @@ impl Renderer
 
     pub fn upload_instances(&mut self, device: &wgpu::Device)
     {
+        if self.draw_commands.is_empty()
+        {
+            self.instance_buf = None;
+            return;
+        }
+        
         let instances: Vec<InstanceData> = self.draw_commands.iter().map(|cmd| InstanceData
         {
             model: cmd.transform,

@@ -1,11 +1,11 @@
 use winit::{event::*,event_loop::EventLoop,window::WindowBuilder};
 
-use crate::state::State;
+use crate::{renderer::Renderer, state::State};
 
 pub trait EngineEvent 
 {
     fn update(&mut self, dt: f64);
-    fn render(&self);
+    fn render(&self, renderer: &mut Renderer);
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
@@ -58,6 +58,7 @@ pub async fn game_loop<T: EngineEvent + 'static>(mut game: Box<T>)
             }
             if window_id == state.window().id() => 
             {
+                
                 if !state.input(event){
                 match event
                 {
@@ -82,7 +83,10 @@ pub async fn game_loop<T: EngineEvent + 'static>(mut game: Box<T>)
                         state.update(); // Temporary
                         // state.input(&event); //Temporary
                         ///////////////////////////////////////////////////
-                        match state.render() 
+                        match state.render(|renderer|
+                        {
+                            game.render(renderer);
+                        })
                         {
                             Ok(_) => {}
                             Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => state.resize(state.size),

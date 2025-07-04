@@ -105,7 +105,7 @@ impl<'a> State<'a>
     #[allow(unused)]
     pub fn update(&mut self) {}
 
-    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> 
+    pub fn render<T>(&mut self, draw: T) -> Result<(), wgpu::SurfaceError> where T: FnOnce(&mut Renderer)
     {
         let output = self.surface.get_current_texture()?;
         let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
@@ -116,9 +116,10 @@ impl<'a> State<'a>
         });
 
 
-        self.renderer.draw(0, [[1.75, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [0.0, 0.0, 1.0, 1.0]);
-        self.renderer.draw(0, [[1.0, 0.0, 0.0, 0.0], [0.0, 1.75, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [0.0, 0.0, 1.0, 1.0]);
-        self.renderer.draw(0, [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [1.0, 0.0, 0.0, 1.0]);
+        // self.renderer.draw(0, [[1.75, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [0.0, 0.0, 1.0, 1.0]);
+        // self.renderer.draw(0, [[1.0, 0.0, 0.0, 0.0], [0.0, 1.75, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [0.0, 0.0, 1.0, 1.0]);
+        // self.renderer.draw(0, [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [1.0, 0.0, 0.0, 1.0]);
+        draw(&mut self.renderer);
         self.renderer.upload_instances(&self.device);
         {
             self.renderer.begin_pass(&mut encoder, &view);
@@ -126,6 +127,8 @@ impl<'a> State<'a>
 
         self.queue.submit(iter::once(encoder.finish()));
         output.present();
+
+        self.renderer.draw_commands.clear();
 
         Ok(())
     }

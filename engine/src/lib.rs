@@ -7,3 +7,4 @@ pub mod input;
 
 pub use event_loop::{EngineEvent, game_loop};
 pub use renderer::Renderer;
+pub use input::Input;

@@ -1,10 +1,10 @@
 use winit::{event::*,event_loop::EventLoop,window::WindowBuilder};
 
-use crate::{renderer::Renderer, state::State};
+use crate::{input::Input, renderer::Renderer, state::State};
 
 pub trait EngineEvent 
 {
-    fn update(&mut self, dt: f64);
+    fn update(&mut self, input: &Input, dt: f64);
     fn render(&self, renderer: &mut Renderer);
 }
 
@@ -44,6 +44,7 @@ pub async fn game_loop<T: EngineEvent + 'static>(mut game: Box<T>)
 
     let mut state = State::new(&window).await;
     let mut surface_configured = false;
+    let mut input = Input::new();
 
     let mut last_frame_time = std::time::Instant::now();
 
@@ -58,7 +59,7 @@ pub async fn game_loop<T: EngineEvent + 'static>(mut game: Box<T>)
             }
             if window_id == state.window().id() => 
             {
-                
+                input.update_inputs(&event);
                 if !state.input(event){
                 match event
                 {
@@ -110,8 +111,9 @@ pub async fn game_loop<T: EngineEvent + 'static>(mut game: Box<T>)
                 let now = std::time::Instant::now();
                 let dt = (now - last_frame_time).as_secs_f64();
                 
-                game.update(dt);
+                game.update(&input, dt);
                 state.window().request_redraw();
+                input.prev_update();
 
                 last_frame_time = std::time::Instant::now();
             }

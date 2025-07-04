@@ -93,6 +93,10 @@ impl Input
 
     pub fn mouse_position(&self) -> (f64, f64)
     {
-        self.mouse_position.unwrap()
+        if let Some(mouse_pos) = self.mouse_position
+        {
+            return mouse_pos;
+        }
+        return (0.0, 0.0);
     }
 }

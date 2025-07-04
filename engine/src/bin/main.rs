@@ -32,14 +32,17 @@ impl EngineEvent for App
             self.rotation = 0.0;
         }
 
-        self.x = (input.mouse_position().0 as f32 / 512.0) * 2.0 - 1.0; //Temporary (just playing around), later better with projection matrix
-        self.y = -((input.mouse_position().1 as f32 / 512.0) * 2.0 - 1.0);
+        self.x = (input.mouse_position().0 as f32 / 1280.0) * 2.0 - 1.0; //Temporary (just playing around), later better with projection matrix
+        self.y = -((input.mouse_position().1 as f32 / 720.0) * 2.0 - 1.0);
     }
     fn render(&self, renderer: &mut Renderer) //Column-major layout
     {
-        renderer.draw(0, [[self.rotation.cos(), self.rotation.sin(), 0.0, 0.0], [-self.rotation.sin(), self.rotation.cos(), 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [0.0, 0.0, 1.0, 1.0]);
-        renderer.draw(0, [[(-self.rotation).cos(), (-self.rotation).sin(), 0.0, 0.0], [-(-self.rotation).sin(), (-self.rotation).cos(), 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [1.0, 0.0, 0.0, 1.0]);
-        renderer.draw(0, [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [self.x, self.y, 0.0, 1.0]], [0.0, 1.0, 0.0, 1.0]);
+        let aspect = 1280.0 / 720.0; //Temporary, here also projection matrix
+        let scale = 1.0/aspect;
+        
+        renderer.draw(0, [[scale*self.rotation.cos(), self.rotation.sin(), 0.0, 0.0], [scale*-self.rotation.sin(), self.rotation.cos(), 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [0.0, 0.0, 1.0, 1.0]);
+        renderer.draw(0, [[scale*(-self.rotation).cos(), (-self.rotation).sin(), 0.0, 0.0], [scale*-(-self.rotation).sin(), (-self.rotation).cos(), 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [1.0, 0.0, 0.0, 1.0]);
+        renderer.draw(0, [[scale*1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [self.x, self.y, 0.0, 1.0]], [0.0, 1.0, 0.0, 1.0]);
     }
 }
 
@@ -53,5 +56,5 @@ impl App
 
 fn main()
 {
-    pollster::block_on(game_loop(Box::new(App::new()), "Animate", (512, 512)))
+    pollster::block_on(game_loop(Box::new(App::new()), "Animate", (1280, 720)))
 }

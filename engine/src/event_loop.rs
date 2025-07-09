@@ -44,7 +44,8 @@ pub async fn game_loop<T: EngineEvent + 'static>(mut game: Box<T>, title: &str, 
 
     let mut state = State::new(&window).await;
     let mut surface_configured = false;
-    let mut input = Input::new();
+    let size = window.inner_size();
+    let mut input = Input::new((size.width as f64, size.height as f64));
 
     let mut last_frame_time = std::time::Instant::now();
 
@@ -69,6 +70,7 @@ pub async fn game_loop<T: EngineEvent + 'static>(mut game: Box<T>, title: &str, 
                         log::info!("physical_size: {physical_size:?}");
                         surface_configured = true;
                         state.resize(*physical_size);
+                        input.update_screen((physical_size.width as f64, physical_size.height as f64));
                     }
                     WindowEvent::RedrawRequested => 
                     {

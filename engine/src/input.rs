@@ -9,11 +9,13 @@ pub struct Input
     mouse_pressed: HashSet<MouseButton>,
     prev_mouse_pressed: HashSet<MouseButton>,
     mouse_position: Option<(f64, f64)>,
+    window_size: (f64, f64),
+    virtual_size: (f64, f64)
 }
 
 impl Input
 {
-    pub(crate) fn new() -> Self
+    pub(crate) fn new(window_size: (f64, f64)) -> Self
     {
         Self
         {
@@ -22,6 +24,8 @@ impl Input
             mouse_pressed: HashSet::new(),
             prev_mouse_pressed: HashSet::new(),
             mouse_position: None,
+            window_size,
+            virtual_size: window_size
         }
     }
 
@@ -71,6 +75,11 @@ impl Input
         self.prev_mouse_pressed = self.mouse_pressed.clone();
     }
 
+    pub(crate) fn update_screen(&mut self, size: (f64, f64))
+    {
+        self.window_size = size;
+    }
+
     pub fn is_key_hold(&self, key: KeyCode) -> bool
     {
         self.keys_pressed.contains(&key)
@@ -91,11 +100,20 @@ impl Input
         self.mouse_pressed.contains(&button) && !self.prev_mouse_pressed.contains(&button)
     }
 
-    pub fn mouse_position(&self) -> (f64, f64)
+    pub fn actual_mouse_position(&self) -> (f64, f64)
     {
         if let Some(mouse_pos) = self.mouse_position
         {
             return mouse_pos;
+        }
+        return (0.0, 0.0);
+    }
+
+    pub fn mouse_position(&self) -> (f64, f64)
+    {
+        if let Some(mouse_pos) = self.mouse_position
+        {
+            return (mouse_pos.0/self.window_size.0*self.virtual_size.0, mouse_pos.1/self.window_size.1*self.virtual_size.1);
         }
         return (0.0, 0.0);
     }

@@ -27,7 +27,7 @@ pub struct Renderer
     instance_buf: Option<wgpu::Buffer>,
     meshes: Vec<Mesh>, // Simple for now, later gonna change it, so it does not load all meshes ni the beginning, but only creates a mesh the first time it is requested
     pub window_size: (f32, f32),
-    virtual_size: (f32, f32)
+    pub virtual_size: (f32, f32)
 }
 
 impl Renderer
@@ -247,6 +247,8 @@ impl Renderer
     }
 
     // Still draws with pixels, but this time everything gets drawn like it looks with the original screen-size, so resized looks the same (in relation to each other)
+    // If using this, when trying to use the windowsize, use virtual_size instead of window_size
+    // Because everything here is in relation to the original "virtual" size, not the actual window size
     pub fn matrix(&self, pos: (f32, f32), size: (f32, f32), rotation: f32) -> [[f32; 4]; 4]
     {
         let aspect = self.window_size.0/self.window_size.1;

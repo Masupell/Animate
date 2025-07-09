@@ -44,7 +44,7 @@ impl EngineEvent for App
         renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), self.rotation), [0.0, 0.0, 1.0, 1.0]);
         renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), -self.rotation), [1.0, 0.0, 0.0, 1.0]);
         renderer.draw(0, renderer.matrix((self.x, self.y), (100.0, 100.0), 0.0), [0.0, 1.0, 0.0, 1.0]);
-        renderer.draw(0, renderer.matrix((100.0, 100.0), (100.0, 100.0), 0.0), [1.0, 1.0, 0.0, 1.0]);
+        renderer.draw_texture(0, renderer.matrix((100.0, 100.0), (100.0, 100.0), 0.0), 0);
     }
 }
 

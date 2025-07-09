@@ -43,13 +43,20 @@ impl Vertex
 }
 
 
+#[derive(Copy, Clone)]
+pub enum DrawType
+{
+    Color([f32; 4]),
+    Texture(u32)
+}
 
 #[derive(Copy, Clone)]
 pub struct DrawCommand
 {
     pub mesh_id: usize,
     pub transform: [[f32; 4]; 4], // 4x4 model matrix
-    pub color: [f32; 4],          // RGBA color
+    // pub color: [f32; 4],          // RGBA color
+    pub kind: DrawType
 }
 
 #[repr(C)]
@@ -58,6 +65,9 @@ pub struct InstanceData
 {
     pub model: [[f32; 4]; 4],
     pub color: [f32; 4],
+    pub mode: u32, //0 = color, 1 = texture
+    pub texture_id: u32,
+    pub _padding: [u32; 2] //Padding to keep alignement
 }
 
 impl InstanceData
@@ -101,6 +111,18 @@ impl InstanceData
                     shader_location: 6,
                     format: wgpu::VertexFormat::Float32x4,
                 },
+                wgpu::VertexAttribute //mode
+                {
+                    offset: 5 * std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
+                    shader_location: 7,
+                    format: wgpu::VertexFormat::Uint32
+                },
+                wgpu::VertexAttribute //texture id
+                {
+                    offset: 5 * std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress + 4,
+                    shader_location: 8,
+                    format: wgpu::VertexFormat::Uint32
+                }
             ],
         }
     }

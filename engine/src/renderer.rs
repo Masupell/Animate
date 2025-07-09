@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use crate::{texture, utility::{DrawCommand, InstanceData, Mesh, Vertex}};
+use crate::{texture, utility::{DrawCommand, DrawType, InstanceData, Mesh, Vertex}};
 
 
 
@@ -195,7 +195,12 @@ impl Renderer
 
     pub fn draw(&mut self, mesh_id: usize, transform: [[f32; 4]; 4], color: [f32; 4])
     {
-        self.draw_commands.push(DrawCommand { mesh_id, transform, color });
+        self.draw_commands.push(DrawCommand { mesh_id, transform, kind: DrawType::Color(color) });
+    }
+
+    pub fn draw_texture(&mut self, mesh_id: usize, transform: [[f32; 4]; 4], texture_id: u32)
+    {
+        self.draw_commands.push(DrawCommand { mesh_id, transform, kind: DrawType::Texture(texture_id) });
     }
 
     pub fn upload_instances(&mut self, device: &wgpu::Device)
@@ -206,10 +211,35 @@ impl Renderer
             return;
         }
         
-        let instances: Vec<InstanceData> = self.draw_commands.iter().map(|cmd| InstanceData
+        // let instances: Vec<InstanceData> = self.draw_commands.iter().map(|cmd| InstanceData
+        // {
+        //     model: cmd.transform,
+        //     color: cmd.color
+        // }).collect();
+
+        let instances: Vec<InstanceData> = self.draw_commands.iter().map(|cmd|
         {
-            model: cmd.transform,
-            color: cmd.color
+            match cmd.kind
+            {
+                DrawType::Color(color) => 
+                InstanceData
+                {
+                    model: cmd.transform,
+                    color: color,
+                    mode: 0,
+                    texture_id: 0,
+                    _padding: [0; 2]
+                },
+                DrawType::Texture(id) => 
+                InstanceData
+                {
+                    model: cmd.transform,
+                    color: [0.0, 0.0, 0.0, 1.0], // Ignored here
+                    mode: 1,
+                    texture_id: id,
+                    _padding: [0; 2]
+                }
+            }
         }).collect();
 
         self.instance_buf = Some(device.create_buffer_init(&wgpu::util::BufferInitDescriptor

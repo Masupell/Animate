@@ -245,4 +245,24 @@ impl Renderer
             [(pos.0/self.window_size.0)*2.0-1.0, -((pos.1/self.window_size.1)*2.0-1.0), 0.0, 1.0]
         ]
     }
+
+    // Still draws with pixels, but this time everything gets drawn like it looks with the original screen-size, so resized looks the same (in relation to each other)
+    pub fn matrix(&self, pos: (f32, f32), size: (f32, f32), rotation: f32) -> [[f32; 4]; 4]
+    {
+        let aspect = self.window_size.0/self.window_size.1;
+        let scale = 1./aspect;
+
+        let cos = rotation.cos();
+        let sin = rotation.sin();
+
+        let scale_x = (size.0/self.virtual_size.1)*2.0;
+        let scale_y = (size.1/self.virtual_size.1)*2.0;
+
+        [
+            [scale*cos*scale_x, sin*scale_x, 0.0, 0.0], 
+            [scale*-sin*scale_y, cos*scale_y, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0], 
+            [(pos.0/self.virtual_size.0)*2.0-1.0, -((pos.1/self.virtual_size.1)*2.0-1.0), 0.0, 1.0]
+        ]
+    }
 }

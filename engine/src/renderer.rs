@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use crate::utility::{DrawCommand, InstanceData, Mesh, Vertex};
+use crate::{texture, utility::{DrawCommand, InstanceData, Mesh, Vertex}};
 
 
 
@@ -27,13 +27,22 @@ pub struct Renderer
     instance_buf: Option<wgpu::Buffer>,
     meshes: Vec<Mesh>, // Simple for now, later gonna change it, so it does not load all meshes ni the beginning, but only creates a mesh the first time it is requested
     pub window_size: (f32, f32),
-    pub virtual_size: (f32, f32)
+    pub virtual_size: (f32, f32),
+    diffuse_bind_group: wgpu::BindGroup
 }
 
 impl Renderer
 {
-    pub fn new(device: &wgpu::Device, config: &wgpu::SurfaceConfiguration, window_size: (f32, f32)) -> Self
+    pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, config: &wgpu::SurfaceConfiguration, window_size: (f32, f32)) -> Self
     {
+        //TextureTest
+        let diffuse_bytes = include_bytes!("image/owl.jpg");
+        let diffuse_texture = texture::Texture::from_bytes(device, queue, diffuse_bytes, "image").unwrap();
+        let (texture_bindgroup_layout, diffuse_bind_group) = diffuse_texture.bind_group(&device);
+
+
+
+
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor
         {
             label: Some("Shader"),
@@ -45,7 +54,7 @@ impl Renderer
             label: Some("Render Pipeline Layout"),
             bind_group_layouts: 
             &[
-                
+                &texture_bindgroup_layout
             ],
             push_constant_ranges: &[]
         });
@@ -79,7 +88,7 @@ impl Renderer
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
                 cull_mode: Some(wgpu::Face::Back),
-                polygon_mode: wgpu::PolygonMode::Line, //::Line only work with required_features: wgpu::Features::POLYGON_MODE_LINE in request device
+                polygon_mode: wgpu::PolygonMode::Fill, //::Line only work with required_features: wgpu::Features::POLYGON_MODE_LINE in request device
                 unclipped_depth: false,
                 conservative: false
             },
@@ -126,7 +135,8 @@ impl Renderer
             instance_buf: None,
             meshes,
             window_size,
-            virtual_size: window_size
+            virtual_size: window_size,
+            diffuse_bind_group
         }
     }
 
@@ -176,6 +186,7 @@ impl Renderer
                 let mesh = &self.meshes[cmd.mesh_id];
 
                 render_pass.set_vertex_buffer(0, mesh.vertex_buf.slice(..));
+                render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
                 render_pass.set_index_buffer(mesh.index_buf.slice(..), wgpu::IndexFormat::Uint16);
                 render_pass.draw_indexed(0..mesh.index_count, 0, instance_id as u32..instance_id as u32 + 1);
             }

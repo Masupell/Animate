@@ -14,7 +14,8 @@ struct VertexInput
 struct VertexOutput 
 {
     @builtin(position) clip_position: vec4<f32>,
-    @location(0) color: vec4<f32>
+    @location(0) color: vec4<f32>,
+    @location(1) tex_coords: vec2<f32>
 };
 
 @vertex
@@ -31,14 +32,20 @@ fn vs_main(in: VertexInput) -> VertexOutput
 
     out.clip_position = model * vec4<f32>(in.position, 1.0);
     out.color = in.color;
-    // out.tex_coords = in.tex_coords;
+    out.tex_coords = in.tex_coords;
     return out;
 }
 
+
+@group(0) @binding(0)
+var texture: texture_2d<f32>;
+@group(0) @binding(1)
+var texture_sampler: sampler;
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> 
 {
     // return vec4<f32>(0.3, 0.2, 0.1, 1.0);
-    return in.color;
+    // return in.color;
+    return textureSample(texture, texture_sampler, in.tex_coords);
 }

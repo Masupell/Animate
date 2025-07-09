@@ -69,7 +69,8 @@ impl<'a> State<'a>
 
         surface.configure(&device, &config);
 
-        let renderer = Renderer::new(&device, &config);
+        let size = window.inner_size();
+        let renderer = Renderer::new(&device, &config, (size.width as f32, size.height as f32));
 
         Self 
         {
@@ -96,6 +97,7 @@ impl<'a> State<'a>
             self.config.width = new_size.width;
             self.config.height = new_size.height;
             self.surface.configure(&self.device, &self.config);
+            self.renderer.window_size = (new_size.width as f32, new_size.height as f32);
         }
     }
 

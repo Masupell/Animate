@@ -25,12 +25,13 @@ pub struct Renderer
     pub pipeline: wgpu::RenderPipeline,
     pub draw_commands: Vec<DrawCommand>,
     instance_buf: Option<wgpu::Buffer>,
-    meshes: Vec<Mesh> // Simple for now, later gonna change it, so it does not load all meshes ni the beginning, but only creates a mesh the first time it is requested
+    meshes: Vec<Mesh>, // Simple for now, later gonna change it, so it does not load all meshes ni the beginning, but only creates a mesh the first time it is requested
+    pub window_size: (f32, f32)
 }
 
 impl Renderer
 {
-    pub fn new(device: &wgpu::Device, config: &wgpu::SurfaceConfiguration) -> Self
+    pub fn new(device: &wgpu::Device, config: &wgpu::SurfaceConfiguration, window_size: (f32, f32)) -> Self
     {
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor
         {
@@ -122,7 +123,8 @@ impl Renderer
             pipeline,
             draw_commands: Vec::new(),
             instance_buf: None,
-            meshes
+            meshes,
+            window_size
         }
     }
 
@@ -203,5 +205,22 @@ impl Renderer
             contents: bytemuck::cast_slice(&instances),
             usage: wgpu::BufferUsages::VERTEX
         }));
+    }
+
+    // pos in pixels, size as in 1.0 is default scale, rotation in radians (all for 2D, would work for 3D, but this is 2D)
+    pub fn to_matrix(&self, pos: (f32, f32), size: (f32, f32), rotation: f32) -> [[f32; 4]; 4]
+    {
+        let aspect = self.window_size.0/self.window_size.1;
+        let scale = 1./aspect;
+
+        let cos = rotation.cos();
+        let sin = rotation.sin();
+
+        [
+            [scale*cos*size.0, sin*size.0, 0.0, 0.0], 
+            [scale*-sin*size.1, cos*size.1, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0], 
+            [(pos.0/self.window_size.0)*2.0-1.0, -((pos.1/self.window_size.1)*2.0-1.0), 0.0, 1.0]
+        ]
     }
 }

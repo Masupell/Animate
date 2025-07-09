@@ -26,7 +26,8 @@ pub struct Renderer
     pub draw_commands: Vec<DrawCommand>,
     instance_buf: Option<wgpu::Buffer>,
     meshes: Vec<Mesh>, // Simple for now, later gonna change it, so it does not load all meshes ni the beginning, but only creates a mesh the first time it is requested
-    pub window_size: (f32, f32)
+    pub window_size: (f32, f32),
+    virtual_size: (f32, f32)
 }
 
 impl Renderer
@@ -124,7 +125,8 @@ impl Renderer
             draw_commands: Vec::new(),
             instance_buf: None,
             meshes,
-            window_size
+            window_size,
+            virtual_size: window_size
         }
     }
 
@@ -219,6 +221,26 @@ impl Renderer
         [
             [scale*cos*size.0, sin*size.0, 0.0, 0.0], 
             [scale*-sin*size.1, cos*size.1, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0], 
+            [(pos.0/self.window_size.0)*2.0-1.0, -((pos.1/self.window_size.1)*2.0-1.0), 0.0, 1.0]
+        ]
+    }
+
+    // Size in pixels now too
+    // Always stays the same size, even if screen gets resized (so always 100px big for example), so not relative says but static
+    pub fn pixel_matrix(&self, pos: (f32, f32), size: (f32, f32), rotation: f32) -> [[f32; 4]; 4]
+    {
+        let aspect = self.window_size.0/self.window_size.1;
+        let scale = 1./aspect;
+
+        let cos = rotation.cos();
+        let sin = rotation.sin();
+
+        let pixel_size = ((size.0/self.window_size.1)*2.0, (size.1/self.window_size.1)*2.0);
+
+        [
+            [scale*cos*pixel_size.0, sin*pixel_size.0, 0.0, 0.0], 
+            [scale*-sin*pixel_size.1, cos*pixel_size.1, 0.0, 0.0],
             [0.0, 0.0, 1.0, 0.0], 
             [(pos.0/self.window_size.0)*2.0-1.0, -((pos.1/self.window_size.1)*2.0-1.0), 0.0, 1.0]
         ]

@@ -42,7 +42,8 @@ impl EngineEvent for App
         // renderer.draw(0, [[scale*1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [self.x, self.y, 0.0, 1.0]], [0.0, 1.0, 0.0, 1.0]);
         renderer.draw(0, renderer.to_matrix((renderer.window_size.0/2.0, renderer.window_size.1/2.0), (1.0, 1.0), self.rotation), [0.0, 0.0, 1.0, 1.0]);
         renderer.draw(0, renderer.to_matrix((renderer.window_size.0/2.0, renderer.window_size.1/2.0), (1.0, 1.0), -self.rotation), [1.0, 0.0, 0.0, 1.0]);
-        renderer.draw(0, renderer.to_matrix((self.x, self.y), (1.0, 1.0), 0.0), [0.0, 1.0, 0.0, 1.0]);
+        renderer.draw(0, renderer.pixel_matrix((self.x, self.y), (100.0, 100.0), 0.0), [0.0, 1.0, 0.0, 1.0]);
+        renderer.draw(0, renderer.pixel_matrix((100.0, 100.0), (100.0, 100.0), 0.0), [1.0, 1.0, 0.0, 1.0]);
     }
 }
 

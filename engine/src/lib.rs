@@ -4,6 +4,7 @@ pub mod event_loop;
 pub mod utility;
 pub mod renderer;
 pub mod input;
+pub mod shader;
 
 pub use event_loop::{EngineEvent, game_loop};
 pub use renderer::Renderer;

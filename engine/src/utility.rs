@@ -1,3 +1,9 @@
+use std::sync::Arc;
+
+use wgpu::ShaderModule;
+
+use crate::{shader::Shader, texture::Texture};
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex
@@ -139,4 +145,24 @@ pub struct Mesh
 pub enum MeshID
 {
     QUAD = 0
+}
+
+
+
+pub struct Material
+{
+    pub shader: Arc<Shader>,
+    pub texture: Option<Arc<Texture>>
+}
+
+impl Material
+{
+    pub fn new(shader: Arc<Shader>, texture: Option<Arc<Texture>>) -> Self
+    {
+        Material 
+        { 
+            shader,
+            texture
+        }   
+    }
 }

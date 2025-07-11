@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use crate::{texture, utility::{DrawCommand, DrawType, InstanceData, Mesh, Vertex}};
+use crate::{shader::Shader, texture, utility::{DrawCommand, DrawType, InstanceData, Mesh, Vertex}};
 
 
 
@@ -31,7 +31,7 @@ pub struct Renderer
     diffuse_bind_group: wgpu::BindGroup
 }
 
-impl Renderer
+    impl Renderer
 {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, config: &wgpu::SurfaceConfiguration, window_size: (f32, f32)) -> Self
     {
@@ -43,11 +43,7 @@ impl Renderer
 
 
 
-        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor
-        {
-            label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shaders/shader.wgsl").into()),
-        });
+        let shader = Shader::default(device);
 
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor
         {
@@ -65,15 +61,15 @@ impl Renderer
             layout: Some(&layout),
             vertex: wgpu::VertexState 
             {
-                module: &shader,
-                entry_point: Some("vs_main"),
+                module: &shader.module,
+                entry_point: Some(&shader.vs_entry),
                 buffers: &[Vertex::desc(), InstanceData::desc()],
                 compilation_options: wgpu::PipelineCompilationOptions::default()
             },
             fragment: Some(wgpu::FragmentState
             {
-                module: &shader,
-                entry_point: Some("fs_main"),
+                module: &shader.module,
+                entry_point: Some(&shader.fs_entry),
                 targets: &[Some(wgpu::ColorTargetState
                 {
                     format: config.format,

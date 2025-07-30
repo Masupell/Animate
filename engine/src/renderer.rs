@@ -199,14 +199,14 @@ impl Renderer
         }
     }
 
-    pub fn draw(&mut self, mesh_id: usize, transform: [[f32; 4]; 4], color: [f32; 4])
+    pub fn draw(&mut self, mesh_id: usize, transform: [[f32; 4]; 4], color: [f32; 4], z_index: u32)
     {
-        self.draw_commands.push(DrawCommand { mesh_id, transform, kind: DrawType::Color(color) });
+        self.draw_commands.push(DrawCommand { mesh_id, transform, kind: DrawType::Color(color), z_index });
     }
 
-    pub fn draw_texture(&mut self, mesh_id: usize, transform: [[f32; 4]; 4], texture_id: u32)
+    pub fn draw_texture(&mut self, mesh_id: usize, transform: [[f32; 4]; 4], texture_id: u32, z_index: u32)
     {
-        self.draw_commands.push(DrawCommand { mesh_id, transform, kind: DrawType::Texture(texture_id) });
+        self.draw_commands.push(DrawCommand { mesh_id, transform, kind: DrawType::Texture(texture_id), z_index });
     }
 
     pub fn upload_instances(&mut self, device: &wgpu::Device)
@@ -222,6 +222,8 @@ impl Renderer
         //     model: cmd.transform,
         //     color: cmd.color
         // }).collect();
+
+        self.draw_commands.sort_by_key(|cmd| cmd.z_index);
 
         let instances: Vec<InstanceData> = self.draw_commands.iter().map(|cmd|
         {

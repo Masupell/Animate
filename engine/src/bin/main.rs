@@ -41,10 +41,10 @@ impl EngineEvent for App
         // renderer.draw(0, [[scale*(-self.rotation).cos(), (-self.rotation).sin(), 0.0, 0.0], [scale*-(-self.rotation).sin(), (-self.rotation).cos(), 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [1.0, 0.0, 0.0, 1.0]);
         // renderer.draw(0, [[scale*1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [self.x, self.y, 0.0, 1.0]], [0.0, 1.0, 0.0, 1.0]);
         
-        renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), self.rotation), [0.0, 0.0, 1.0, 1.0]);
-        renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), -self.rotation), [1.0, 0.0, 0.0, 1.0]);
-        renderer.draw(0, renderer.matrix((self.x, self.y), (100.0, 100.0), 0.0), [0.0, 1.0, 0.0, 1.0]);
-        renderer.draw_texture(0, renderer.matrix((100.0, 100.0), (100.0, 100.0), 0.0), 0);
+        renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), self.rotation), [0.0, 0.0, 1.0, 1.0], 1);
+        renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), -self.rotation), [1.0, 0.0, 0.0, 1.0], 0);
+        renderer.draw(0, renderer.matrix((self.x, self.y), (100.0, 100.0), 0.0), [0.0, 1.0, 0.0, 1.0], 2);
+        renderer.draw_texture(0, renderer.matrix((100.0, 100.0), (100.0, 100.0), 0.0), 0, 3);
     }
 }
 

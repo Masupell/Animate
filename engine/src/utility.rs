@@ -62,7 +62,8 @@ pub struct DrawCommand
     pub mesh_id: usize,
     pub transform: [[f32; 4]; 4], // 4x4 model matrix
     // pub color: [f32; 4],          // RGBA color
-    pub kind: DrawType
+    pub kind: DrawType,
+    pub z_index: u32
 }
 
 #[repr(C)]

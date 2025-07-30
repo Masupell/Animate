@@ -1,7 +1,7 @@
 use std::iter;
-use winit::{event::*,event_loop::EventLoop,window::{Window, WindowBuilder}};
+use winit::{event::*,window::Window};
 
-use crate::{renderer::Renderer, utility::MeshID};
+use crate::renderer::Renderer;
 
 pub struct State<'a> 
 {
@@ -70,7 +70,7 @@ impl<'a> State<'a>
         surface.configure(&device, &config);
 
         let size = window.inner_size();
-        let renderer = Renderer::new(&device, &queue, &config, (size.width as f32, size.height as f32));
+        let renderer = Renderer::new(&device, &config, (size.width as f32, size.height as f32));
 
         Self 
         {

@@ -1,8 +1,8 @@
-use std::{fmt::format, sync::Arc};
+use std::sync::Arc;
 
 use wgpu::util::DeviceExt;
 
-use crate::{shader::Shader, texture::Texture, utility::{DrawCommand, DrawType, InstanceData, Material, MaterialType, Mesh, Vertex}};
+use crate::{shader::Shader, texture::Texture, utility::{DrawCommand, InstanceData, Material, MaterialType, Mesh, Vertex}};
 
 
 
@@ -38,23 +38,9 @@ pub struct Renderer
 
 impl Renderer
 {
-    pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, config: &wgpu::SurfaceConfiguration, window_size: (f32, f32)) -> Self
+    pub fn new(device: &wgpu::Device, config: &wgpu::SurfaceConfiguration, window_size: (f32, f32)) -> Self
     {
-        //TextureTest
-        // let mut texture_bind_groups = Vec::new();
-        // let diffuse_bytes = include_bytes!("image/owl.jpg");
-        // let _diffuse_texture = Texture::from_bytes(device, queue, diffuse_bytes, "image").unwrap();
         let texture_bindgroup_layout = Texture::bind_group_layout(&device);
-        // let diffuse_bind_group =  diffuse_texture.bind_group(&device, &texture_bindgroup_layout);
-        // texture_bind_groups.push(diffuse_bind_group);
-
-        // let diffuse_bytes = include_bytes!("image/cheetah.jpg");
-        // let diffuse_texture = Texture::from_bytes(device, queue, diffuse_bytes, "image").unwrap();
-        // let (_, diffuse_bind_group) = diffuse_texture.bind_group(&device);
-        // texture_bind_groups.push(diffuse_bind_group);
-
-
-
 
         let shader = Shader::default(device);
 
@@ -218,7 +204,7 @@ impl Renderer
                     {
                         render_pass.set_bind_group(0, self.textures[0].as_ref(), &[]);
                     }
-                    MaterialType::Texture(texture, _) => 
+                    MaterialType::Texture(texture) => 
                     {
                         let test = texture.as_ref();
                         render_pass.set_bind_group(0, test, &[]);
@@ -236,10 +222,10 @@ impl Renderer
         self.draw_commands.push(DrawCommand { mesh_id, transform, /*kind: DrawType::Color(color), */z_index, material: Arc::new(Material::color(color)) });
     }
 
-    pub fn draw_texture(&mut self, mesh_id: usize, transform: [[f32; 4]; 4], texture_id: u32, z_index: u32)
+    pub fn draw_texture(&mut self, mesh_id: usize, transform: [[f32; 4]; 4], texture_id: usize, z_index: u32)
     {
-        let texture = Arc::clone(&self.textures[texture_id as usize]);
-        self.draw_commands.push(DrawCommand { mesh_id, transform, /*kind: DrawType::Texture(texture_id), */z_index, material: Arc::new(Material::texture(texture, texture_id)) });
+        let texture = Arc::clone(&self.textures[texture_id]);
+        self.draw_commands.push(DrawCommand { mesh_id, transform, /*kind: DrawType::Texture(texture_id), */z_index, material: Arc::new(Material::texture(texture)) });
     }
 
     pub fn upload_instances(&mut self, device: &wgpu::Device)
@@ -286,15 +272,13 @@ impl Renderer
                 {
                     model: cmd.transform,
                     color: color,
-                    mode: 0,
-                    texture_id: 0
+                    mode: 0
                 },
-                MaterialType::Texture(_, texture_id) => InstanceData
+                MaterialType::Texture(_) => InstanceData
                 {
                     model: cmd.transform,
                     color: [0.0, 0.0, 0.0, 1.0], // Ignored here
-                    mode: 1,
-                    texture_id
+                    mode: 1
                 }
             }
         }).collect();

@@ -11,7 +11,7 @@ struct VertexInput
     @location(6) color: vec4<f32>,
 
     @location(7) mode: u32,
-    @location(8) texture_id: u32
+    // @location(8) texture_id: u32
 }
 
 struct VertexOutput 
@@ -20,7 +20,7 @@ struct VertexOutput
     @location(0) color: vec4<f32>,
     @location(1) tex_coords: vec2<f32>,
     @location(2) mode: u32,
-    @location(3) texture_id: u32
+    // @location(3) texture_id: u32
 };
 
 @vertex
@@ -39,7 +39,7 @@ fn vs_main(in: VertexInput) -> VertexOutput
     out.color = in.color;
     out.tex_coords = in.tex_coords;
     out.mode = in.mode;
-    out.texture_id = in.texture_id;
+    // out.texture_id = in.texture_id;
     return out;
 }
 

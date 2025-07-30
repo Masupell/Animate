@@ -1,9 +1,5 @@
 use std::sync::Arc;
 
-use wgpu::ShaderModule;
-
-use crate::{shader::Shader, texture::Texture};
-
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex
@@ -58,7 +54,7 @@ pub enum DrawType
 
 pub enum MaterialType
 {
-    Texture(Arc<wgpu::BindGroup>, u32), // Texture and texture_id
+    Texture(Arc<wgpu::BindGroup>),
     Color([f32; 4])
 }
 
@@ -78,8 +74,7 @@ pub struct InstanceData
 {
     pub model: [[f32; 4]; 4],
     pub color: [f32; 4],
-    pub mode: u32, //0 = color, 1 = texture
-    pub texture_id: u32
+    pub mode: u32 //0 = color, 1 = texture
 }
 
 impl InstanceData
@@ -128,12 +123,6 @@ impl InstanceData
                     offset: 5 * std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
                     shader_location: 7,
                     format: wgpu::VertexFormat::Uint32
-                },
-                wgpu::VertexAttribute //texture id
-                {
-                    offset: 5 * std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress + 4,
-                    shader_location: 8,
-                    format: wgpu::VertexFormat::Uint32
                 }
             ],
         }
@@ -181,11 +170,11 @@ impl Material
         }
     }
 
-    pub fn texture(texture: Arc<wgpu::BindGroup>, id: u32) -> Self
+    pub fn texture(texture: Arc<wgpu::BindGroup>) -> Self
     {
         Material 
         { 
-            kind: MaterialType::Texture(texture, id)
+            kind: MaterialType::Texture(texture)
         }
     }
 }

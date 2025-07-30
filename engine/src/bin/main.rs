@@ -1,21 +1,23 @@
 use std::f32::consts::PI;
 
-use engine::{texture::Texture, *};
+use engine::*;
 use winit::{event::MouseButton, keyboard::KeyCode};
 
 struct App 
 {
     rotation: f32,
     x: f32,
-    y: f32
+    y: f32,
+    cheetah: usize,
+    owl: usize
 }
 
 impl EngineEvent for App
 {
     fn setup(&mut self, loader: &mut dyn state::Loader) 
     {
-        loader.load_texture("engine/src/image/owl.jpg");
-        loader.load_texture("engine/src/image/cheetah.jpg");
+        self.owl = loader.load_texture("engine/src/image/owl.jpg");
+        self.cheetah = loader.load_texture("engine/src/image/cheetah.jpg");
     }
     
     fn update(&mut self, input: &Input, dt: f64) 
@@ -46,11 +48,11 @@ impl EngineEvent for App
         // renderer.draw(0, [[scale*self.rotation.cos(), self.rotation.sin(), 0.0, 0.0], [scale*-self.rotation.sin(), self.rotation.cos(), 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [0.0, 0.0, 1.0, 1.0]);
         // renderer.draw(0, [[scale*(-self.rotation).cos(), (-self.rotation).sin(), 0.0, 0.0], [scale*-(-self.rotation).sin(), (-self.rotation).cos(), 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [1.0, 0.0, 0.0, 1.0]);
         // renderer.draw(0, [[scale*1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [self.x, self.y, 0.0, 1.0]], [0.0, 1.0, 0.0, 1.0]);
-        renderer.draw_texture(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.0, renderer.virtual_size.1), 0.0), 1, 0);
+        renderer.draw_texture(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.0, renderer.virtual_size.1), 0.0), self.cheetah, 0);
         renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), self.rotation), [0.0, 0.0, 1.0, 0.5], 1);
         renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), -self.rotation), [1.0, 0.0, 0.0, 0.5], 2);
         renderer.draw(0, renderer.matrix((self.x, self.y), (100.0, 100.0), 0.0), [0.0, 1.0, 0.0, 1.0], 3);
-        renderer.draw_texture(0, renderer.matrix((100.0, 100.0), (100.0, 100.0), 0.0), 0, 4);
+        renderer.draw_texture(0, renderer.matrix((100.0, 100.0), (100.0, 100.0), 0.0), self.owl, 4);
     }
 }
 
@@ -62,7 +64,9 @@ impl App
         { 
             rotation: 0.0, 
             x: 0.0, 
-            y: 0.0 
+            y: 0.0,
+            cheetah: 0,
+            owl: 0
         }
     }
 }

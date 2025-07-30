@@ -6,12 +6,12 @@ use crate::{renderer::Renderer, utility::MeshID};
 pub struct State<'a> 
 {
     surface: wgpu::Surface<'a>,
-    device: wgpu::Device,
-    queue: wgpu::Queue,
+    pub device: wgpu::Device,
+    pub queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
     window: &'a Window,
-    renderer: Renderer
+    pub renderer: Renderer
 }
 
 impl<'a> State<'a> 
@@ -70,9 +70,7 @@ impl<'a> State<'a>
         surface.configure(&device, &config);
 
         let size = window.inner_size();
-        let mut renderer = Renderer::new(&device, &queue, &config, (size.width as f32, size.height as f32));
-        renderer.load_texture(&device, &queue, "engine/src/image/owl.jpg");
-        renderer.load_texture(&device, &queue, "engine/src/image/cheetah.jpg");
+        let renderer = Renderer::new(&device, &queue, &config, (size.width as f32, size.height as f32));
 
         Self 
         {
@@ -135,5 +133,39 @@ impl<'a> State<'a>
         self.renderer.draw_commands.clear();
 
         Ok(())
+    }
+
+    pub fn load_texture(&mut self, path: &str) -> usize // Returns ID
+    {
+        self.renderer.load_texture(&self.device, &self.queue, path)
+    }
+}
+
+
+pub trait Loader
+{
+    fn load_texture(&mut self, path: &str) -> usize;
+}
+
+pub struct LoadingContext<'a> 
+{
+    renderer: &'a mut Renderer,
+    device: &'a wgpu::Device,
+    queue: &'a wgpu::Queue,
+}
+
+impl<'a> LoadingContext<'a>
+{
+    pub fn new(renderer: &'a mut Renderer, device: &'a wgpu::Device, queue: &'a wgpu::Queue,) -> Self
+    {
+        Self { renderer, device, queue }
+    }
+}
+
+impl<'a> Loader for LoadingContext<'a> 
+{
+    fn load_texture(&mut self, path: &str) -> usize 
+    {
+        self.renderer.load_texture(self.device, self.queue, path)
     }
 }

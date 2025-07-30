@@ -12,6 +12,12 @@ struct App
 
 impl EngineEvent for App
 {
+    fn setup(&mut self, loader: &mut dyn state::Loader) 
+    {
+        loader.load_texture("engine/src/image/owl.jpg");
+        loader.load_texture("engine/src/image/cheetah.jpg");
+    }
+    
     fn update(&mut self, input: &Input, dt: f64) 
     {
         if input.is_mouse_pressed(MouseButton::Left)

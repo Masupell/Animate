@@ -1,9 +1,10 @@
 use winit::{dpi::LogicalSize, event::*, event_loop::EventLoop, window::WindowBuilder};
 
-use crate::{input::Input, renderer::Renderer, state::State};
+use crate::{input::Input, renderer::Renderer, state::{Loader, LoadingContext, State}};
 
 pub trait EngineEvent 
 {
+    fn setup(&mut self, loader: &mut dyn Loader);
     fn update(&mut self, input: &Input, dt: f64);
     fn render(&self, renderer: &mut Renderer);
 }
@@ -46,6 +47,9 @@ pub async fn game_loop<T: EngineEvent + 'static>(mut game: Box<T>, title: &str, 
     let mut surface_configured = false;
     let size = window.inner_size();
     let mut input = Input::new((size.width as f64, size.height as f64));
+
+    let mut loader = LoadingContext::new(&mut state.renderer, &mut state.device, &mut state.queue);
+    game.setup(&mut loader);
 
     let mut last_frame_time = std::time::Instant::now();
 

@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use crate::{shader::Shader, texture, utility::{DrawCommand, DrawType, InstanceData, Mesh, Vertex}};
+use crate::{shader::Shader, texture::Texture, utility::{DrawCommand, DrawType, InstanceData, Mesh, Vertex}};
 
 
 
@@ -28,17 +28,26 @@ pub struct Renderer
     meshes: Vec<Mesh>, // Simple for now, later gonna change it, so it does not load all meshes ni the beginning, but only creates a mesh the first time it is requested
     pub window_size: (f32, f32),
     pub virtual_size: (f32, f32),
-    diffuse_bind_group: wgpu::BindGroup
+    diffuse_bind_group: wgpu::BindGroup,
+    // texture_bind_groups: Vec<wgpu::BindGroup>
 }
 
-    impl Renderer
+impl Renderer
 {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, config: &wgpu::SurfaceConfiguration, window_size: (f32, f32)) -> Self
     {
         //TextureTest
+        // let mut texture_bind_groups = Vec::new();
         let diffuse_bytes = include_bytes!("image/owl.jpg");
-        let diffuse_texture = texture::Texture::from_bytes(device, queue, diffuse_bytes, "image").unwrap();
-        let (texture_bindgroup_layout, diffuse_bind_group) = diffuse_texture.bind_group(&device);
+        let diffuse_texture = Texture::from_bytes(device, queue, diffuse_bytes, "image").unwrap();
+        let texture_bindgroup_layout = diffuse_texture.bind_group_layout(&device);
+        let diffuse_bind_group = diffuse_texture.bind_group(&device, &texture_bindgroup_layout);
+        // texture_bind_groups.push(diffuse_bind_group);
+
+        // let diffuse_bytes = include_bytes!("image/cheetah.jpg");
+        // let diffuse_texture = Texture::from_bytes(device, queue, diffuse_bytes, "image").unwrap();
+        // let (_, diffuse_bind_group) = diffuse_texture.bind_group(&device);
+        // texture_bind_groups.push(diffuse_bind_group);
 
 
 
@@ -133,6 +142,7 @@ pub struct Renderer
             window_size,
             virtual_size: window_size,
             diffuse_bind_group
+            // texture_bind_groups
         }
     }
 

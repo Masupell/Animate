@@ -12,6 +12,13 @@ pub struct Texture
 
 impl Texture
 {
+    pub fn white(device: &wgpu::Device, queue: &wgpu::Queue) -> Result<Self>
+    {
+        let pixel: [u8; 4] = [255, 255, 255, 255];
+        let img = image::DynamicImage::ImageRgba8(image::ImageBuffer::from_raw(1, 1, pixel.to_vec()).unwrap());
+        Self::from_image(device, queue, &img, Some("White"))
+    }
+    
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, path: &str) -> Result<Self>
     {
         let img = image::open(path)?;
@@ -82,8 +89,8 @@ impl Texture
         Ok(Self { texture, view, sampler })
     }
 
-    // texture_bindgroup_layout, diffuse_bind_group
-    pub fn bind_group(&self, device: &wgpu::Device) -> (wgpu::BindGroupLayout, wgpu::BindGroup)
+    // bindgroup_layout
+    pub fn bind_group_layout(&self, device: &wgpu::Device) -> wgpu::BindGroupLayout
     {
         let texture_bindgroup_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor
         {
@@ -111,11 +118,16 @@ impl Texture
                 }
             ]
         });
+        texture_bindgroup_layout
+    }
 
-        let diffuse_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor
+    // bind_group
+    pub fn bind_group(&self, device: &wgpu::Device, bindgroup_layout: &wgpu::BindGroupLayout) -> wgpu::BindGroup
+    {
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor
         {
             label: Some("Diffuse Bind Group"),
-            layout: &texture_bindgroup_layout,
+            layout: bindgroup_layout,
             entries:
             &[
                 wgpu::BindGroupEntry
@@ -130,7 +142,6 @@ impl Texture
                 }
             ]
         });
-
-        (texture_bindgroup_layout, diffuse_bind_group)
+        bind_group
     }
 }

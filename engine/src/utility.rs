@@ -56,14 +56,20 @@ pub enum DrawType
     Texture(u32)
 }
 
-#[derive(Copy, Clone)]
+pub enum MaterialType
+{
+    Texture(Arc<wgpu::BindGroup>, u32), // Texture and texture_id
+    Color([f32; 4])
+}
+
+// #[derive(Copy, Clone)]
 pub struct DrawCommand
 {
     pub mesh_id: usize,
     pub transform: [[f32; 4]; 4], // 4x4 model matrix
-    // pub color: [f32; 4],          // RGBA color
-    pub kind: DrawType,
-    pub z_index: u32
+    // pub kind: DrawType,
+    pub z_index: u32,
+    pub material: Arc<Material>
 }
 
 #[repr(C)]
@@ -73,8 +79,7 @@ pub struct InstanceData
     pub model: [[f32; 4]; 4],
     pub color: [f32; 4],
     pub mode: u32, //0 = color, 1 = texture
-    pub texture_id: u32,
-    pub _padding: [u32; 2] //Padding to keep alignement
+    pub texture_id: u32
 }
 
 impl InstanceData
@@ -152,18 +157,35 @@ pub enum MeshID
 
 pub struct Material
 {
-    pub shader: Arc<Shader>,
-    pub texture: Option<Arc<Texture>>
+    // pub shader: Arc<Shader>, // Will do it later
+    // pub texture: Option<Arc<Texture>>
+    pub kind: MaterialType
 }
 
 impl Material
 {
-    pub fn new(shader: Arc<Shader>, texture: Option<Arc<Texture>>) -> Self
+    // pub fn new(shader: Arc<Shader>, texture: Option<Arc<Texture>>) -> Self
+    // {
+    //     Material 
+    //     { 
+    //         // shader,
+    //         // texture
+
+    //     }   
+    // }
+    pub fn color(color: [f32; 4]) -> Self
+    {
+        Material 
+        {
+            kind: MaterialType::Color(color)
+        }
+    }
+
+    pub fn texture(texture: Arc<wgpu::BindGroup>, id: u32) -> Self
     {
         Material 
         { 
-            shader,
-            texture
-        }   
+            kind: MaterialType::Texture(texture, id)
+        }
     }
 }

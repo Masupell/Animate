@@ -70,7 +70,9 @@ impl<'a> State<'a>
         surface.configure(&device, &config);
 
         let size = window.inner_size();
-        let renderer = Renderer::new(&device, &queue, &config, (size.width as f32, size.height as f32));
+        let mut renderer = Renderer::new(&device, &queue, &config, (size.width as f32, size.height as f32));
+        renderer.load_texture(&device, &queue, "engine/src/image/owl.jpg");
+        renderer.load_texture(&device, &queue, "engine/src/image/cheetah.jpg");
 
         Self 
         {

@@ -8,6 +8,7 @@ pub struct Texture
     pub texture: wgpu::Texture,
     pub view: wgpu::TextureView,
     pub sampler: wgpu::Sampler,
+    pub bind_group: Option<wgpu::BindGroup>
 }
 
 impl Texture
@@ -86,11 +87,11 @@ impl Texture
             ..Default::default()
         });
 
-        Ok(Self { texture, view, sampler })
+        Ok(Self { texture, view, sampler, bind_group: None })
     }
 
     // bindgroup_layout
-    pub fn bind_group_layout(&self, device: &wgpu::Device) -> wgpu::BindGroupLayout
+    pub fn bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout
     {
         let texture_bindgroup_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor
         {
@@ -142,6 +143,7 @@ impl Texture
                 }
             ]
         });
+        // self.bind_group = Some(bind_group);
         bind_group
     }
 }

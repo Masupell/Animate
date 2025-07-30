@@ -1,6 +1,8 @@
+use std::{fmt::format, sync::Arc};
+
 use wgpu::util::DeviceExt;
 
-use crate::{shader::Shader, texture::Texture, utility::{DrawCommand, DrawType, InstanceData, Mesh, Vertex}};
+use crate::{shader::Shader, texture::Texture, utility::{DrawCommand, DrawType, InstanceData, Material, MaterialType, Mesh, Vertex}};
 
 
 
@@ -28,7 +30,9 @@ pub struct Renderer
     meshes: Vec<Mesh>, // Simple for now, later gonna change it, so it does not load all meshes ni the beginning, but only creates a mesh the first time it is requested
     pub window_size: (f32, f32),
     pub virtual_size: (f32, f32),
-    diffuse_bind_group: wgpu::BindGroup,
+    textures: Vec<Arc<wgpu::BindGroup>>,
+    texture_bindgroup_layout: wgpu::BindGroupLayout
+    // diffuse_bind_group: wgpu::BindGroup,
     // texture_bind_groups: Vec<wgpu::BindGroup>
 }
 
@@ -38,10 +42,10 @@ impl Renderer
     {
         //TextureTest
         // let mut texture_bind_groups = Vec::new();
-        let diffuse_bytes = include_bytes!("image/owl.jpg");
-        let diffuse_texture = Texture::from_bytes(device, queue, diffuse_bytes, "image").unwrap();
-        let texture_bindgroup_layout = diffuse_texture.bind_group_layout(&device);
-        let diffuse_bind_group = diffuse_texture.bind_group(&device, &texture_bindgroup_layout);
+        // let diffuse_bytes = include_bytes!("image/owl.jpg");
+        // let _diffuse_texture = Texture::from_bytes(device, queue, diffuse_bytes, "image").unwrap();
+        let texture_bindgroup_layout = Texture::bind_group_layout(&device);
+        // let diffuse_bind_group =  diffuse_texture.bind_group(&device, &texture_bindgroup_layout);
         // texture_bind_groups.push(diffuse_bind_group);
 
         // let diffuse_bytes = include_bytes!("image/cheetah.jpg");
@@ -141,9 +145,21 @@ impl Renderer
             meshes,
             window_size,
             virtual_size: window_size,
-            diffuse_bind_group
+            textures: Vec::new(),
+            texture_bindgroup_layout
+            // diffuse_bind_group
             // texture_bind_groups
         }
+    }
+
+    pub fn load_texture(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, path: &str) -> usize
+    {
+        let error = format!("Failed to load texture with path: {}", path);
+        let texture = Texture::new(device, queue, path).expect(&error);
+        let bindgroup = Arc::new(texture.bind_group(device, &self.texture_bindgroup_layout));
+        let id = self.textures.len();
+        self.textures.push(bindgroup);
+        id
     }
 
     pub fn begin_pass(&self, encoder: &mut wgpu::CommandEncoder, view: &wgpu::TextureView)
@@ -192,8 +208,24 @@ impl Renderer
                 let mesh = &self.meshes[cmd.mesh_id];
 
                 render_pass.set_vertex_buffer(0, mesh.vertex_buf.slice(..));
-                render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
                 render_pass.set_index_buffer(mesh.index_buf.slice(..), wgpu::IndexFormat::Uint16);
+
+
+                // render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
+                match &cmd.material.kind 
+                {
+                    MaterialType::Color(_) =>
+                    {
+                        render_pass.set_bind_group(0, self.textures[0].as_ref(), &[]);
+                    }
+                    MaterialType::Texture(texture, _) => 
+                    {
+                        let test = texture.as_ref();
+                        render_pass.set_bind_group(0, test, &[]);
+                    }
+                }
+
+
                 render_pass.draw_indexed(0..mesh.index_count, 0, instance_id as u32..instance_id as u32 + 1);
             }
         }
@@ -201,12 +233,13 @@ impl Renderer
 
     pub fn draw(&mut self, mesh_id: usize, transform: [[f32; 4]; 4], color: [f32; 4], z_index: u32)
     {
-        self.draw_commands.push(DrawCommand { mesh_id, transform, kind: DrawType::Color(color), z_index });
+        self.draw_commands.push(DrawCommand { mesh_id, transform, /*kind: DrawType::Color(color), */z_index, material: Arc::new(Material::color(color)) });
     }
 
     pub fn draw_texture(&mut self, mesh_id: usize, transform: [[f32; 4]; 4], texture_id: u32, z_index: u32)
     {
-        self.draw_commands.push(DrawCommand { mesh_id, transform, kind: DrawType::Texture(texture_id), z_index });
+        let texture = Arc::clone(&self.textures[texture_id as usize]);
+        self.draw_commands.push(DrawCommand { mesh_id, transform, /*kind: DrawType::Texture(texture_id), */z_index, material: Arc::new(Material::texture(texture, texture_id)) });
     }
 
     pub fn upload_instances(&mut self, device: &wgpu::Device)
@@ -227,25 +260,41 @@ impl Renderer
 
         let instances: Vec<InstanceData> = self.draw_commands.iter().map(|cmd|
         {
-            match cmd.kind
+            let material = &cmd.material;
+            // match cmd.kind
+            // {
+            //     DrawType::Color(color) => 
+            //     InstanceData
+            //     {
+            //         model: cmd.transform,
+            //         color: color,
+            //         mode: 0,
+            //         texture_id: 0
+            //     },
+            //     DrawType::Texture(id) => 
+            //     InstanceData
+            //     {
+            //         model: cmd.transform,
+            //         color: [0.0, 0.0, 0.0, 1.0], // Ignored here
+            //         mode: 1,
+            //         texture_id: id
+            //     }
+            // }
+            match material.kind
             {
-                DrawType::Color(color) => 
-                InstanceData
+                MaterialType::Color(color) => InstanceData
                 {
                     model: cmd.transform,
                     color: color,
                     mode: 0,
-                    texture_id: 0,
-                    _padding: [0; 2]
+                    texture_id: 0
                 },
-                DrawType::Texture(id) => 
-                InstanceData
+                MaterialType::Texture(_, texture_id) => InstanceData
                 {
                     model: cmd.transform,
                     color: [0.0, 0.0, 0.0, 1.0], // Ignored here
                     mode: 1,
-                    texture_id: id,
-                    _padding: [0; 2]
+                    texture_id
                 }
             }
         }).collect();

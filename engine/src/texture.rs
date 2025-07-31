@@ -90,6 +90,70 @@ impl Texture
         Ok(Self { texture, view, sampler, bind_group: None })
     }
 
+    // Right now pretty much almost the exact same code as from_image, but to lazy to combine into one right now
+    pub fn from_alpha_bitmap(device: &wgpu::Device, queue: &wgpu::Queue, bitmap: &[u8], width: usize, height: usize, label: Option<&str>) -> Result<Self>
+    {
+        let mut rgba =  Vec::with_capacity(width * height * 4);
+        for &alpha in bitmap 
+        {
+            rgba.extend_from_slice(&[255, 255, 255, alpha]);
+        }
+
+        let size = wgpu::Extent3d
+        {
+            width: width as u32,
+            height: height as u32,
+            depth_or_array_layers: 1,
+        };
+
+        let texture = device.create_texture(&wgpu::TextureDescriptor
+        {
+            label,
+            size,
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[]
+        });
+
+        queue.write_texture(
+            wgpu::TexelCopyTextureInfo
+            {
+                texture: &texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            &rgba,
+            wgpu::TexelCopyBufferLayout
+            {
+                offset: 0,
+                bytes_per_row: Some(4 * width as u32),
+                rows_per_image: Some(height as u32),
+            },
+            size
+        );
+
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor
+        {
+            address_mode_u: wgpu::AddressMode::ClampToEdge,
+            address_mode_v: wgpu::AddressMode::ClampToEdge,
+            address_mode_w: wgpu::AddressMode::ClampToEdge,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::FilterMode::Nearest,
+            ..Default::default()
+        });
+
+        Ok(Self { texture, view, sampler, bind_group: None })
+    }
+
+
+
     // bindgroup_layout
     pub fn bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout
     {

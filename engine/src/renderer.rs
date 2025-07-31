@@ -148,6 +148,22 @@ impl Renderer
         id
     }
 
+    pub fn load_char(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, char: char) -> Option<usize>
+    {
+        if let Ok(text) = crate::text::rasterize_char("engine/src/image/Montserrat-Bold.ttf", char)
+        {
+            let texture = Texture::from_alpha_bitmap(device, queue, &text.0, text.1, text.2, Some("char")).expect("Failed to create Texture");
+            let bindgroup = Arc::new(texture.bind_group(device, &self.texture_bindgroup_layout));
+            let id = self.textures.len();
+            self.textures.push(bindgroup);
+            Some(id)
+        }
+        else
+        {
+            None
+        }
+    }
+
     pub fn begin_pass(&self, encoder: &mut wgpu::CommandEncoder, view: &wgpu::TextureView)
     {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor 

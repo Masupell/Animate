@@ -1,4 +1,4 @@
-use ab_glyph::{point, Font, FontArc, PxScale, ScaleFont};
+use ab_glyph::{point, Font, FontArc, PxScale};
 use anyhow::{Ok, anyhow};
 
 pub fn rasterize_char(font_path: &str, char: char) -> std::result::Result<(Vec<u8>, usize, usize), anyhow::Error>

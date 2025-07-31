@@ -9,7 +9,8 @@ struct App
     x: f32,
     y: f32,
     cheetah: usize,
-    owl: usize
+    owl: usize,
+    char: usize
 }
 
 impl EngineEvent for App
@@ -18,6 +19,7 @@ impl EngineEvent for App
     {
         self.owl = loader.load_texture("engine/src/image/owl.jpg");
         self.cheetah = loader.load_texture("engine/src/image/cheetah.jpg");
+        self.char = loader.load_char('?').unwrap();
     }
     
     fn update(&mut self, input: &Input, dt: f64) 
@@ -53,6 +55,7 @@ impl EngineEvent for App
         renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), -self.rotation), [1.0, 0.0, 0.0, 0.5], 2);
         renderer.draw(0, renderer.matrix((self.x, self.y), (100.0, 100.0), 0.0), [0.0, 1.0, 0.0, 1.0], 3);
         renderer.draw_texture(0, renderer.matrix((100.0, 100.0), (100.0, 100.0), 0.0), self.owl, 4);
+        renderer.draw_texture(0, renderer.matrix((500.0, 500.0), (100.0, 100.0), 0.0), self.char, 4);
     }
 }
 
@@ -66,7 +69,8 @@ impl App
             x: 0.0, 
             y: 0.0,
             cheetah: 0,
-            owl: 0
+            owl: 0,
+            char: 0
         }
     }
 }

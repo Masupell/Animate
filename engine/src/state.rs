@@ -135,16 +135,22 @@ impl<'a> State<'a>
         Ok(())
     }
 
-    pub fn load_texture(&mut self, path: &str) -> usize // Returns ID
-    {
-        self.renderer.load_texture(&self.device, &self.queue, path)
-    }
+    // pub fn load_texture(&mut self, path: &str) -> usize // Returns ID
+    // {
+    //     self.renderer.load_texture(&self.device, &self.queue, path)
+    // }
+
+    // pub fn load_char(&mut self, char: char) -> Option<usize>
+    // {
+    //     self.renderer.load_char(&self.device, &self.queue, char)
+    // }
 }
 
 
 pub trait Loader
 {
     fn load_texture(&mut self, path: &str) -> usize;
+    fn load_char(&mut self, char: char) -> Option<usize>;
 }
 
 pub struct LoadingContext<'a> 
@@ -167,5 +173,10 @@ impl<'a> Loader for LoadingContext<'a>
     fn load_texture(&mut self, path: &str) -> usize 
     {
         self.renderer.load_texture(self.device, self.queue, path)
+    }
+
+    fn load_char(&mut self, char: char) -> Option<usize>
+    {
+        self.renderer.load_char(self.device, self.queue, char)
     }
 }

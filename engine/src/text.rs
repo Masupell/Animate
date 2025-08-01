@@ -62,7 +62,6 @@ pub fn rasterize_text(font_path: &str, text: &str, text_scale: f32) -> std::resu
 
     for char in text.chars()
     {
-        let glyph_id = font.glyph_id(char);
         let glyph = font.glyph_id(char).with_scale_and_position(scale, point(0.0, 0.0));
 
         println!("{}", char);
@@ -127,6 +126,84 @@ pub fn rasterize_text(font_path: &str, text: &str, text_scale: f32) -> std::resu
 
 
     Ok((atlas, total_width, total_height, glyphs))
+}
+
+// Does not have individual characters, just gets drawn as one texture
+// Better if there is no need for individual character-change
+// Also just in one line
+pub fn rasterize_static_text(font_path: &str, text: &str, text_scale: f32) -> std::result::Result<(Vec<u8>, usize, usize), anyhow::Error>
+{
+    let font_data = std::fs::read(font_path)?;
+    let font = FontArc::try_from_vec(font_data)?;
+    let scale = PxScale::from(text_scale);
+
+    let mut bitmaps = Vec::new();
+
+    let mut total_width = 0;
+    let mut total_height = 0;
+
+    let mut min_y = f32::MAX;
+    let mut max_y = f32::MIN;
+
+    let mut glyph_offsets: Vec<usize> = Vec::new();
+
+    for char in text.chars()
+    {
+        let glyph = font.glyph_id(char).with_scale_and_position(scale, point(0.0, 0.0));
+
+        let outline = font.outline_glyph(glyph).ok_or_else(|| anyhow!("Could not outline glyph '{}'", char))?;
+
+        let bounds = outline.px_bounds();
+        let width = bounds.width().ceil() as usize;
+        let height = bounds.height().ceil() as usize;
+
+        min_y = min_y.min(bounds.min.y);
+        max_y = max_y.max(bounds.max.y);
+
+        let mut bitmap = vec![0u8; width * height];
+        outline.draw(|x, y, c| 
+        { 
+            let xx = x as usize;
+            let yy = y as usize;
+
+            if xx < width && yy < height
+            {
+                bitmap[yy * width + xx] = (c * 255.0) as u8;
+            }
+        });
+
+        bitmaps.push((bitmap, width, height));
+        total_width += width; // Here it is supposed to be horizontal, it is just text
+
+        glyph_offsets.push(height as usize);
+
+        println!("max_y: {}, min_y: {}", max_y, min_y);
+        println!("Char '{}', height: {}", char, height);
+    }
+    // let y_offset = -min_y.ceil() as usize;
+    total_height = (max_y - min_y).ceil() as usize;
+
+    let mut atlas = vec![0u8; total_width * total_height];
+
+    let mut x_cursor = 0;
+
+    for ((bitmap, width, height), y_offset) in bitmaps.into_iter().zip(glyph_offsets.into_iter())
+    {
+        for y in 0..height
+        {
+            for x in 0..width
+            {
+                let src = bitmap[y * width + x];
+                let dst_x = x_cursor + x;
+                let dst_y = y + (total_height-y_offset)/2; // important, only works for horizontal texture right now
+                atlas[dst_y * total_width + dst_x] = src;
+            }
+        }
+        x_cursor += width;
+    }
+
+
+    Ok((atlas, total_width, total_height))
 }
 
 

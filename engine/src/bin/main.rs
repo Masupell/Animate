@@ -26,7 +26,7 @@ impl EngineEvent for App
         // {
         //     self.chars.push(loader.load_char(c).unwrap());
         // }
-        let test = loader.load_text("HelloWorld!", 200.0);
+        let test = loader.load_text("Test:qle-|p!", 200.0);
     }
     
     fn update(&mut self, input: &Input, dt: f64) 

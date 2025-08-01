@@ -60,7 +60,7 @@ impl EngineEvent for App
         renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), self.rotation), [0.0, 0.0, 1.0, 0.5], 1);
         renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), -self.rotation), [1.0, 0.0, 0.0, 0.5], 2);
         renderer.draw(0, renderer.matrix((self.x, self.y), (100.0, 100.0), 0.0), [0.0, 1.0, 0.0, 1.0], 3);
-        renderer.draw_texture(0, renderer.matrix((100.0, 100.0), (100.0, 100.0), 0.0), self.owl, 4);
+        renderer.draw_texture(0, renderer.texture_matrix((100.0, 100.0), (0.5, 0.5), 0.0, (1920.0, 1014.0)), self.owl, 4);
         renderer.draw_texture(0, renderer.matrix((500.0, 500.0), (100.0, 100.0), -self.rotation*6.0), self.char, 4);
 
         for (index, count) in self.chars.iter().enumerate()

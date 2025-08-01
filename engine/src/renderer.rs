@@ -365,4 +365,24 @@ impl Renderer
             [(pos.0/self.virtual_size.0)*2.0-1.0, -((pos.1/self.virtual_size.1)*2.0-1.0), 0.0, 1.0]
         ]
     }
+
+    // Size in relative to the original, not pixels
+    pub fn texture_matrix(&self, pos: (f32, f32), scale: (f32, f32), rotation: f32, texture_size: (f32, f32)) -> [[f32; 4]; 4]
+    {
+        let aspect = self.window_size.0/self.window_size.1;
+        let scale_fix = 1./aspect;
+
+        let cos = rotation.cos();
+        let sin = rotation.sin();
+
+        let scale_x = (texture_size.0/self.virtual_size.1)*2.0 * scale.0;
+        let scale_y = (texture_size.1/self.virtual_size.1)*2.0 * scale.1;
+
+        [
+            [scale_fix*cos*scale_x, sin*scale_x, 0.0, 0.0], 
+            [scale_fix*-sin*scale_y, cos*scale_y, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0], 
+            [(pos.0/self.virtual_size.0)*2.0-1.0, -((pos.1/self.virtual_size.1)*2.0-1.0), 0.0, 1.0]
+        ]
+    }
 }

@@ -11,7 +11,7 @@ struct App
     cheetah: usize,
     owl: usize,
     char: usize,
-    chars: Vec<usize>
+    // chars: Vec<usize>
 }
 
 impl EngineEvent for App
@@ -21,11 +21,12 @@ impl EngineEvent for App
         self.owl = loader.load_texture("engine/src/image/owl.jpg");
         self.cheetah = loader.load_texture("engine/src/image/cheetah.jpg");
         self.char = loader.load_char('?').unwrap();
-        let text = "HelloWorld!";
-        for c in text.chars()
-        {
-            self.chars.push(loader.load_char(c).unwrap());
-        }
+        // let text = "HelloWorld!";
+        // for c in text.chars()
+        // {
+        //     self.chars.push(loader.load_char(c).unwrap());
+        // }
+        let test = loader.load_text("HelloWorld!", 200.0);
     }
     
     fn update(&mut self, input: &Input, dt: f64) 
@@ -61,12 +62,14 @@ impl EngineEvent for App
         renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), -self.rotation), [1.0, 0.0, 0.0, 0.5], 2);
         renderer.draw(0, renderer.matrix((self.x, self.y), (100.0, 100.0), 0.0), [0.0, 1.0, 0.0, 1.0], 3);
         renderer.draw_texture(0, renderer.texture_matrix((100.0, 100.0), (0.5, 0.5), 0.0, (1920.0, 1014.0)), self.owl, 4);
-        renderer.draw_texture(0, renderer.matrix((500.0, 500.0), (100.0, 100.0), -self.rotation*6.0), self.char, 4);
+        renderer.draw_texture(0, renderer.texture_matrix((500.0, 500.0), (1.0, 1.0), 0.0, (24.0, 39.0)), self.char, 4);
 
-        for (index, count) in self.chars.iter().enumerate()
-        {
-            renderer.draw_texture(0, renderer.matrix((200.0 + index as f32 *70.0, 200.0), (50.0, 50.0), 0.0), *count, 5);
-        }
+        renderer.draw_texture(0, renderer.texture_matrix((600.0, 500.0), (1.0, 01.0), 0.0, (796.0, 124.0)), 3, 5);
+
+        // for (index, count) in self.chars.iter().enumerate()
+        // {
+        //     renderer.draw_texture(0, renderer.matrix((200.0 + index as f32 *70.0, 200.0), (50.0, 50.0), 0.0), *count, 5);
+        // }
     }
 }
 
@@ -82,7 +85,7 @@ impl App
             cheetah: 0,
             owl: 0,
             char: 0,
-            chars: Vec::new()
+            // chars: Vec::new()
         }
     }
 }

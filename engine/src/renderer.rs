@@ -164,6 +164,58 @@ impl Renderer
         }
     }
 
+    pub fn load_text(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, text: &str, size: f32) -> Option<usize>
+    {
+        // if let Ok(text) = crate::text::rasterize_text("engine/src/image/Montserrat-Bold.ttf", text, size)
+        // {
+        //     //Test
+        //         let output = image::RgbaImage::from_vec(text.1 as u32, text.2 as u32, text.0.to_vec()).unwrap();
+        //         output.save("engine/src/image/text_texture.png").unwrap();
+        //     //
+        //     let texture = Texture::from_alpha_bitmap(device, queue, &text.0, text.1, text.2, Some("text")).expect("Failed to create Texture");
+        //     let bindgroup = Arc::new(texture.bind_group(device, &self.texture_bindgroup_layout));
+        //     let id = self.textures.len();
+        //     self.textures.push(bindgroup);
+        //     Some(id)
+        // }
+        // else
+        // {
+            
+        //     println!("Text Rasterizing Failed!");
+        //     None
+        // }
+
+        match crate::text::rasterize_text("engine/src/image/Montserrat-Bold.ttf", text, size) 
+        {
+            Ok(text) => 
+            {
+                // Test
+                let output = image::GrayImage::from_vec(text.1 as u32, text.2 as u32, text.0.to_vec());
+                match output 
+                {
+                    Some(image) =>
+                    {
+                        image.save("engine/src/image/text_texture.png").unwrap();
+                    }
+                    None => println!("Hello")
+                }
+                // output.save("engine/src/image/text_texture.png").unwrap();
+                //
+
+                let texture = Texture::from_alpha_bitmap(device, queue, &text.0, text.1, text.2, Some("text")).expect("Failed to create Texture");
+                let bindgroup = Arc::new(texture.bind_group(device, &self.texture_bindgroup_layout));
+                let id = self.textures.len();
+                self.textures.push(bindgroup);
+                Some(id)
+            }
+            Err(e) => 
+            {
+                println!("Text Rasterizing Failed: {:?}", e);
+                None
+            }
+        }
+    }
+
     pub fn begin_pass(&self, encoder: &mut wgpu::CommandEncoder, view: &wgpu::TextureView)
     {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor 

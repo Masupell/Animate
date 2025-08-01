@@ -18,6 +18,7 @@ pub fn rasterize_char(font_path: &str, char: char) -> std::result::Result<(Vec<u
     let bounds = outline.px_bounds();
     let width = bounds.width().ceil() as usize;
     let height = bounds.height().ceil() as usize;
+    println!("Width: {}, Heigth: {}", width, height);
 
     let mut bitmap = vec![0u8; width * height];
     outline.draw(|x, y, c| 
@@ -34,58 +35,118 @@ pub fn rasterize_char(font_path: &str, char: char) -> std::result::Result<(Vec<u
     Ok((bitmap, width, height))
 }
 
-// pub struct TextHandler
-// {
-//     fonts: Vec<FontArc> // Not sure if this is the best way, but for now it's fine
-// }
-
-// impl TextHandler
-// {
-//     pub fn new(font_paths: Vec<&str>) -> std::result::Result<TextHandler, anyhow::Error>
-//     {
-//         let mut fonts: Vec<FontArc> = Vec::new();
-
-//         for path in font_paths
-//         {
-//             let font_data = std::fs::read(path)?;
-//             let font = FontArc::try_from_vec(font_data)?;
-//             fonts.push(font);
-//         }
-
-//         Ok(TextHandler
-//         { 
-//             fonts 
-//         })
-//     }
-
-//     pub fn add_font(&mut self, font_path: &str) -> std::result::Result<usize, anyhow::Error> // returns id of font (just vector-position)
-//     {
-//         let font_data = std::fs::read(font_path)?;
-//         let font = FontArc::try_from_vec(font_data)?;
-//         let id = self.fonts.len();
-//         self.fonts.push(font);
-//         Ok(id)
-//     }
-
-//     pub fn rasterize_text(text: &str, text_scale: f32) -> std::result::Result<(Vec<u8>, usize, usize), anyhow::Error>
-//     {
-//         let scale = PxScale::from(text_scale);
-
-
-//     }
-// }
-
-pub struct FontAtlas
-{
-    pub texture: wgpu::BindGroup,
-    pub glyphs: HashMap<char, Glyph>
-}
 
 pub struct Glyph
 {
     pub uv_min: [f32; 2], // top left (uv coordinate in texture)
     pub uv_max: [f32; 2], // top right ("-")
     pub size: [f32; 2], // width and height of bitmap
-    // pub offset: [f32; 2], // offset of baseline (like down or Up, forp or l)
+    pub offset: [f32; 2], // offset of baseline (like down or Up, forp or l)
     pub advance: f32, // Space after Glyph
 }
+
+
+pub fn rasterize_text(font_path: &str, text: &str, text_scale: f32) -> std::result::Result<(Vec<u8>, usize, usize, Vec<Glyph>), anyhow::Error>
+{
+    let font_data = std::fs::read(font_path)?;
+    let font = FontArc::try_from_vec(font_data)?;
+    let scale = PxScale::from(text_scale);
+
+    let mut bitmaps = Vec::new();
+    let mut glyphs: Vec<Glyph> = Vec::new();
+
+    let mut total_width = 0;
+    let mut total_height = 0;
+
+    let mut offset: [f32; 2] = [0.0, 0.0];
+
+    for char in text.chars()
+    {
+        let glyph_id = font.glyph_id(char);
+        let glyph = font.glyph_id(char).with_scale_and_position(scale, point(0.0, 0.0));
+
+        println!("{}", char);
+
+        let outline = font.outline_glyph(glyph).ok_or_else(|| anyhow!("Could not outline glyph '{}'", char))?;
+
+        let bounds = outline.px_bounds();
+        let width = bounds.width().ceil() as usize;
+        let height = bounds.height().ceil() as usize;
+
+        offset = [bounds.min.x, bounds.min.y];
+
+        // let advance = 
+
+        let mut bitmap = vec![0u8; width * height];
+        outline.draw(|x, y, c| 
+        { 
+            let xx = x as usize;
+            let yy = y as usize;
+
+            if xx < width && yy < height
+            {
+                bitmap[yy * width + xx] = (c * 255.0) as u8;
+            }
+        });
+
+        bitmaps.push((bitmap, width, height));
+        total_width += width; // Just a horizontal texture strip for now
+        total_height = total_height.max(height);
+    }
+
+    let mut atlas = vec![0u8; total_width * total_height];
+
+    let mut x_cursor = 0;
+    for (bitmap, width, height) in bitmaps
+    {
+        for y in 0..height
+        {
+            for x in 0..width
+            {
+                let src = bitmap[y * width + x];
+                let dst_x = x_cursor + x;
+                let dst_y = y; // important, only works for horizontal texture right now
+                atlas[dst_y * total_width + dst_x] = src;
+            }
+        }
+
+        let uv_min = [x_cursor as f32 / total_width as f32, 0.0];
+        let uv_max = [(x_cursor + width) as f32 / total_width as f32, height as f32 / total_height as f32];
+
+        let glyph = Glyph
+        {
+            uv_min,
+            uv_max,
+            size: [width as f32, height as f32],
+            offset,
+            advance: 10.0
+        };
+        glyphs.push(glyph);
+        x_cursor += width;
+    }
+
+
+    Ok((atlas, total_width, total_height, glyphs))
+}
+
+
+// For Preloading Fonts, good when often used and not changed, like in game-engines
+// Not so good for graphics application like gimp, because I can not resize the font after loading it
+// pub struct FontAtlas
+// {
+//     pub texture: wgpu::BindGroup,
+//     pub glyphs: HashMap<char, Glyph>
+// }
+
+// impl FontAtlas
+// {
+//     pub fn load_glyphs(font_path: &str)
+//     {
+//         let charset: Vec<char> = (' '..='~').collect();
+
+//         let font_data = std::fs::read(font_path)?;
+//         let font = FontArc::try_from_vec(font_data)?;
+
+
+//     }
+// }

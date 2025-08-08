@@ -3,7 +3,7 @@ use anyhow::*;
 
 
 // Right now, it is just used as a hlper, that returns things, but I need to change it, so that it does everything texture related
-pub struct Texture
+pub struct TextureHandler
 {
     pub texture: wgpu::Texture,
     pub view: wgpu::TextureView,
@@ -11,7 +11,7 @@ pub struct Texture
     pub bind_group: Option<wgpu::BindGroup>
 }
 
-impl Texture
+impl TextureHandler
 {
     pub fn white(device: &wgpu::Device, queue: &wgpu::Queue) -> Result<Self>
     {

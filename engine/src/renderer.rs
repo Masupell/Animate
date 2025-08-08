@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use wgpu::util::DeviceExt;
 
-use crate::{shader::Shader, texture::Texture, utility::{DrawCommand, InstanceData, Material, MaterialType, Mesh, Vertex}};
+use crate::{shader::Shader, texture::TextureHandler, utility::{DrawCommand, InstanceData, Material, MaterialType, Mesh, Vertex}};
 
 
 
@@ -40,7 +40,7 @@ impl Renderer
 {
     pub fn new(device: &wgpu::Device, config: &wgpu::SurfaceConfiguration, window_size: (f32, f32)) -> Self
     {
-        let texture_bindgroup_layout = Texture::bind_group_layout(&device);
+        let texture_bindgroup_layout = TextureHandler::bind_group_layout(&device);
 
         let shader = Shader::default(device);
 
@@ -141,7 +141,7 @@ impl Renderer
     pub fn load_texture(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, path: &str) -> usize
     {
         let error = format!("Failed to load texture with path: {}", path);
-        let texture = Texture::new(device, queue, path).expect(&error);
+        let texture = TextureHandler::new(device, queue, path).expect(&error);
         let bindgroup = Arc::new(texture.bind_group(device, &self.texture_bindgroup_layout));
         let id = self.textures.len();
         self.textures.push(bindgroup);
@@ -152,7 +152,7 @@ impl Renderer
     {
         if let Ok(text) = crate::text::rasterize_char("engine/src/image/Montserrat-Bold.ttf", char)
         {
-            let texture = Texture::from_alpha_bitmap(device, queue, &text.0, text.1, text.2, Some("char")).expect("Failed to create Texture");
+            let texture = TextureHandler::from_alpha_bitmap(device, queue, &text.0, text.1, text.2, Some("char")).expect("Failed to create Texture");
             let bindgroup = Arc::new(texture.bind_group(device, &self.texture_bindgroup_layout));
             let id = self.textures.len();
             self.textures.push(bindgroup);
@@ -183,7 +183,7 @@ impl Renderer
                 // output.save("engine/src/image/text_texture.png").unwrap();
                 //
 
-                let texture = Texture::from_alpha_bitmap(device, queue, &text.0, text.1, text.2, Some("text")).expect("Failed to create Texture");
+                let texture = TextureHandler::from_alpha_bitmap(device, queue, &text.0, text.1, text.2, Some("text")).expect("Failed to create Texture");
                 let bindgroup = Arc::new(texture.bind_group(device, &self.texture_bindgroup_layout));
                 let id = self.textures.len();
                 self.textures.push(bindgroup);

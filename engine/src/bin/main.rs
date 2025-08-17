@@ -27,6 +27,7 @@ impl EngineEvent for App
         //     self.chars.push(loader.load_char(c).unwrap());
         // }
         let test = loader.load_text("Test:qle-|p!", 200.0);
+        let _ = loader.load_text("It_Really_Works!", 150.0);
     }
     
     fn update(&mut self, input: &Input, dt: f64) 
@@ -57,7 +58,7 @@ impl EngineEvent for App
         // renderer.draw(0, [[scale*self.rotation.cos(), self.rotation.sin(), 0.0, 0.0], [scale*-self.rotation.sin(), self.rotation.cos(), 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [0.0, 0.0, 1.0, 1.0]);
         // renderer.draw(0, [[scale*(-self.rotation).cos(), (-self.rotation).sin(), 0.0, 0.0], [scale*-(-self.rotation).sin(), (-self.rotation).cos(), 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]], [1.0, 0.0, 0.0, 1.0]);
         // renderer.draw(0, [[scale*1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [self.x, self.y, 0.0, 1.0]], [0.0, 1.0, 0.0, 1.0]);
-        renderer.draw_texture(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.0, renderer.virtual_size.1), 0.0), self.cheetah, 0);
+        renderer.draw_texture(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.window_size.0, renderer.virtual_size.1), 0.0), self.cheetah, 0);
         renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), self.rotation), [0.0, 0.0, 1.0, 0.5], 1);
         renderer.draw(0, renderer.matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (renderer.virtual_size.1/2.0, renderer.virtual_size.1/2.0), -self.rotation), [1.0, 0.0, 0.0, 0.5], 2);
         renderer.draw(0, renderer.matrix((self.x, self.y), (100.0, 100.0), 0.0), [0.0, 1.0, 0.0, 1.0], 3);
@@ -65,6 +66,8 @@ impl EngineEvent for App
         renderer.draw_texture(0, renderer.texture_matrix((500.0, 500.0), (1.0, 1.0), 0.0, (24.0, 39.0)), self.char, 4);
 
         renderer.draw_texture(0, renderer.texture_matrix((600.0, 500.0), (1.0, 01.0), 0.0, (796.0, 124.0)), 3, 5);
+
+        renderer.draw_texture(0, renderer.texture_matrix((renderer.virtual_size.0/2.0, renderer.virtual_size.1/2.0), (1.0, 01.0), 0.0, (913.0, 119.0)), 4, 5);
 
         // for (index, count) in self.chars.iter().enumerate()
         // {

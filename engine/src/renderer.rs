@@ -321,13 +321,17 @@ impl Renderer
                 {
                     model: cmd.transform,
                     color: color,
-                    mode: 0
+                    mode: 0,
+                    uv_min: [0.0,0.0], 
+                    uv_max: [1.0,1.0]
                 },
                 MaterialType::Texture(_) => InstanceData
                 {
                     model: cmd.transform,
                     color: [0.0, 0.0, 0.0, 1.0], // Ignored here
-                    mode: 1
+                    mode: 1,
+                    uv_min: [0.0,0.0], 
+                    uv_max: [1.0,1.0]
                 }
             }
         }).collect();

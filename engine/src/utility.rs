@@ -74,7 +74,9 @@ pub struct InstanceData
 {
     pub model: [[f32; 4]; 4],
     pub color: [f32; 4],
-    pub mode: u32 //0 = color, 1 = texture
+    pub mode: u32, //0 = color, 1 = texture
+    pub uv_min: [f32; 2],
+    pub uv_max: [f32; 2]
 }
 
 impl InstanceData
@@ -123,6 +125,18 @@ impl InstanceData
                     offset: 5 * std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
                     shader_location: 7,
                     format: wgpu::VertexFormat::Uint32
+                },
+                wgpu::VertexAttribute //uv_min
+                {
+                    offset: 5 * std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress + std::mem::size_of::<u32>() as wgpu::BufferAddress,
+                    shader_location: 8,
+                    format: wgpu::VertexFormat::Float32x2
+                },
+                wgpu::VertexAttribute //uv_max
+                {
+                    offset: 5 * std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress + std::mem::size_of::<u32>() as wgpu::BufferAddress + std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
+                    shader_location: 9,
+                    format: wgpu::VertexFormat::Float32x2
                 }
             ],
         }

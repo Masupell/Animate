@@ -195,13 +195,12 @@ pub fn rasterize_static_text(font_path: &str, text: &str, text_scale: f32) -> st
             {
                 let src = bitmap[y * width + x];
                 let dst_x = x_cursor + x;
-                let dst_y = y + (total_height-y_offset)/2; // important, only works for horizontal texture right now
+                let dst_y = y + (total_height-y_offset); // important, only works for horizontal texture right now
                 atlas[dst_y * total_width + dst_x] = src;
             }
         }
         x_cursor += width;
     }
-
 
     Ok((atlas, total_width, total_height))
 }
